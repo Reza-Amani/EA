@@ -1,0 +1,7 @@
+A simple strategy- 
+  trend-based
+		-recognising the trend
+		-entry point
+		-sl/tp
+		-exit/trailing stops
+		-end of trend detection
