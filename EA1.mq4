@@ -7,9 +7,35 @@
 #property link        ""
 #property description "base foundation"
 
-#define MAGICMA  20131111
+//#define MAGICMA  20131111
 //--- Inputs
 input double Lots          =0.1;
+input double level_1 =1.5;
+input double level_2 =3;
+
+//////////////////////////////////////////////////////////////////////
+int determine_zone()
+{
+   iCustom(NULL,0,"my trending", 10, True,0);
+   return 0;
+}
+//+------------------------------------------------------------------+
+//| OnTick function                                                  |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//--- check for history and trading
+   if(Bars<60 || IsTradeAllowed()==false)
+      return;
+//--- calculate open orders by current symbol
+   int zone = determine_zone();
+   if(CalculateCurrentOrders(Symbol())==0) CheckForOpen();
+   else                                     CheckForClose();
+//---
+  }
+//+------------------------------------------------------------------+
+
+
 //input double MaximumRisk   =0.02;
 //input double DecreaseFactor=3;
 //input int    MovingPeriod  =12;
@@ -17,7 +43,7 @@ input double Lots          =0.1;
 //+------------------------------------------------------------------+
 //| Calculate open positions                                         |
 //+------------------------------------------------------------------+
-int CalculateCurrentOrders(string symbol)
+/*int CalculateCurrentOrders(string symbol)
   {
    int buys=0,sells=0;
 //---
@@ -143,3 +169,4 @@ void OnTick()
 //---
   }
 //+------------------------------------------------------------------+
+*/
