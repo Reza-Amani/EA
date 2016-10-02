@@ -10,14 +10,42 @@
 //#define MAGICMA  20131111
 //--- Inputs
 input double Lots          =0.1;
-input double level_1 =1.5;
-input double level_2 =3;
+input double level_1 =15;
+input double level_2 =30;
 
-//////////////////////////////////////////////////////////////////////
+/////////////////////////global variables
+int state_machine = 0;
+int prev_zone = 0;
+double default_lots_for_zone[3]={0,1,3};
+/////////////////////////functions
 int determine_zone()
 {
-   iCustom(NULL,0,"my trending", 10, True,0);
-   return 0;
+   int trens_status = iCustom(NULL,0,"my_ind\my_trending", 10, True,0);
+   if(trens_status < -level_2)
+      return -2;
+   else   if(trens_status < -level_1)
+      return -1;
+   else   if(trens_status < +level_1)
+      return 0;
+   else   if(trens_status < +level_2)
+      return 1;
+   else
+      return 2;
+}
+///////////////////////relative number of lots in order
+double lots_in_order()
+{  //positive for buy orders, negative for sell
+   //returns sum of lots of all orders, current and pending
+   double lots =0;
+   for(int order=0; order<OrdersTotal(); order++)
+   {
+      if(OrderSelect(order,SELECT_BY_POS)==false) continue; 
+      if((OrderType()==OP_BUY) || (OrderType()==OP_BUYLIMIT) || (OrderType()==OP_BUYSTOP))
+          lots += OrderLots();
+      else
+          lots -= OrderLots();
+   }
+   return lots;
 }
 //+------------------------------------------------------------------+
 //| OnTick function                                                  |
@@ -29,10 +57,26 @@ void OnTick()
       return;
 //--- calculate open orders by current symbol
    int zone = determine_zone();
-   if(CalculateCurrentOrders(Symbol())==0) CheckForOpen();
-   else                                     CheckForClose();
+   switch(state_machine)
+   {
+      case 0: //start, wait for zone == 0 
+         if(zone == 0)
+            state_machine = 1;
+            break;
+      case 1:    
+         double lots_in_need = default_lots_for_zone[MathAbs(zone)] - lots_in_order();
+         if( lots_in_need != 0 )
+         {  //need to buy/sell
+            if( lots_in_need >0)
+               OrderSend(Symbol(),OP_BUY, lots_in_need, Ask, 3, 0, 1000,"comment",1234,0, clrBlue);
+            else
+               OrderSend(Symbol(),OP_SELL, -lots_in_need, Bid, 3, 1000, 0,"comsell",4321,0, clrRed);
+         }
+         break;
+   }
+   prev_zone = zone;    
 //---
-  }
+}
 //+------------------------------------------------------------------+
 
 
