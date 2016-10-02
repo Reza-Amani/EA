@@ -20,7 +20,7 @@ double default_lots_for_zone[3]={0,1,3};
 /////////////////////////functions
 int determine_zone()
 {
-   int trens_status = iCustom(NULL,0,"my_ind\my_trending", 10, True,0);
+   int trens_status = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,0);
    if(trens_status < -level_2)
       return -2;
    else   if(trens_status < -level_1)
