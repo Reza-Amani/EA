@@ -3,6 +3,8 @@
 //|                   Copyright 2005-2014, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
+#include <WinUser32.mqh>
+#include <debug_inc.mqh>
 #property copyright   "reza"
 #property link        ""
 #property description "base foundation"
@@ -18,9 +20,61 @@ int state_machine = 0;
 int prev_zone = 0;
 double default_lots_for_zone[3]={0,1,3};
 /////////////////////////functions
+void report_ints(int p1, int p2, int p3)
+{
+   if (!IsVisualMode())
+      return(0);
+   string Comm="";
+   Comm=Comm+p1+"\n";
+   Comm=Comm+p2+"\n";
+   Comm=Comm+p3+"\n";
+   
+   Comment(Comm);
+   keybd_event(19,0,0,0);
+   Sleep(10);
+   keybd_event(19,0,2,0);
+}
+void report_string(string str)
+{
+   if (!IsVisualMode())
+      return(0);
+   Comment(str);
+   keybd_event(19,0,0,0);
+   Sleep(10);
+   keybd_event(19,0,2,0);
+}
+void BreakPoint()
+{
+   //It is expecting, that this function should work
+   //only in tester
+   if (!IsVisualMode())
+      return(0);
+   
+   //Preparing a data for printing
+   //Comment() function is used as 
+   //it give quite clear visualisation
+   string Comm="";
+   Comm=Comm+"Bid="+Bid+"\n";
+   Comm=Comm+"Ask="+Ask+"\n";
+   
+   Comment(Comm);
+   
+   //Press/release Pause button
+   //19 is a Virtual Key code of "Pause" button
+   //Sleep() is needed, because of the probability
+   //to misprocess too quick pressing/releasing
+   //of the button
+   keybd_event(19,0,0,0);
+   Sleep(10);
+   keybd_event(19,0,2,0);
+}
 int determine_zone()
 {
-   int trens_status = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,0);
+  double trens_status = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,1);
+//  int trens_status = iCustom(NULL,0,"test", 10, True,0,1);
+//   int trens_status = iCustom(NULL,0,"Custom Moving Averages",0,0);
+   logb("iCustom=",DoubleToStr(1.45,4)) ;
+   logb("iCustom=",DoubleToStr(trens_status,8)) ;
    if(trens_status < -level_2)
       return -2;
    else   if(trens_status < -level_1)
@@ -53,17 +107,22 @@ double lots_in_order()
 void OnTick()
   {
 //--- check for history and trading
+
+//                  logt1("Symbol() = ", Symbol()) ; // demo showing how to add paramters 
    if(Bars<60 || IsTradeAllowed()==false)
       return;
 //--- calculate open orders by current symbol
+//BreakPoint();
    int zone = determine_zone();
    switch(state_machine)
    {
       case 0: //start, wait for zone == 0 
+         report_string("state 0");
          if(zone == 0)
             state_machine = 1;
             break;
       case 1:    
+         report_string("state 1");
          double lots_in_need = default_lots_for_zone[MathAbs(zone)] - lots_in_order();
          if( lots_in_need != 0 )
          {  //need to buy/sell
@@ -75,6 +134,8 @@ void OnTick()
          break;
    }
    prev_zone = zone;    
+   report_ints(zone,state_machine,10000*iCustom(NULL,0,"my_ind/my_trending",10,True, 0,1));//10, True,0,0));
+//   report_ints(zone,state_machine,10000*iMA(NULL,0,14,0,MODE_SMA, PRICE_TYPICAL,0));//"my_ind/my_trending",10,True, 0,0));//10, True,0,0));
 //---
 }
 //+------------------------------------------------------------------+
