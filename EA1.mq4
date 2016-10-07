@@ -11,14 +11,15 @@
 
 //#define MAGICMA  20131111
 //--- Inputs
-input double Lots          =0.1;
-input double level_1 =15;
+input double Lots          =1;
+input double level_1 =10;
 input double level_2 =30;
 
 /////////////////////////global variables
 int state_machine = 0;
 int prev_zone = 0;
-double default_lots_for_zone[3]={0,1,3};
+int tick_cnt = 0;
+double temp;
 /////////////////////////functions
 void report_ints(int p1, int p2, int p3)
 {
@@ -68,23 +69,72 @@ void BreakPoint()
    Sleep(10);
    keybd_event(19,0,2,0);
 }
+///////////////////////////////trend-related funcs
+double default_lots_for_zone(int zone)
+{  //returns desired lots for given zone
+   if(zone<=-2)
+      return -3;
+   if(zone==-1)
+      return -1;
+   if(zone==0)
+      return 0;
+   if(zone==1)
+      return 1;
+   if(zone>=2)
+      return 2;
+      
+}
+
 int determine_zone()
 {
-  double trens_status = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,1);
-//  int trens_status = iCustom(NULL,0,"test", 10, True,0,1);
-//   int trens_status = iCustom(NULL,0,"Custom Moving Averages",0,0);
-   logb("iCustom=",DoubleToStr(1.45,4)) ;
-   logb("iCustom=",DoubleToStr(trens_status,8)) ;
-   if(trens_status < -level_2)
+//  double indicator = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,0);//!!
+  double indicator = iCustom(NULL,0,"my_ind/my_trending",0,1);//!!
+  temp = indicator;
+   logb("my_trending=",DoubleToStr(indicator,8)) ;
+   if(indicator < -level_2)
       return -2;
-   else   if(trens_status < -level_1)
+   else   if(indicator < -level_1)
       return -1;
-   else   if(trens_status < +level_1)
+   else   if(indicator < +level_1)
       return 0;
-   else   if(trens_status < +level_2)
+   else   if(indicator < +level_2)
       return 1;
    else
       return 2;
+}
+///////////////////////
+void close_or_sell(double lots_to_be_sold)
+{  //first try to close buy (pending or real orders)
+   //then sell the remaining lots
+   double sold_lots =0;
+   for(int order=0; order<OrdersTotal(); order++)
+   {
+      if(OrderSelect(order,SELECT_BY_POS)==false) continue; 
+      if((OrderType()==OP_BUY) || (OrderType()==OP_BUYLIMIT) || (OrderType()==OP_BUYSTOP))
+      {
+          sold_lots += OrderLots();
+          OrderClose(OrderTicket(),OrderLots(),Bid,10,clrOrange); 
+      }
+   }
+   if(sold_lots < lots_to_be_sold)
+      OrderSend(Symbol(),OP_SELL, lots_to_be_sold-sold_lots, Bid, 3, 1000, 0,"comsell",4321,0, clrRed);
+}
+
+void close_or_buy(double lots_to_be_bought)
+{  //first try to close sell (pending or real orders)
+   //then buy the remaining lots
+   double bought_lots =0;
+   for(int order=0; order<OrdersTotal(); order++)
+   {
+      if(OrderSelect(order,SELECT_BY_POS)==false) continue; 
+      if((OrderType()==OP_SELL) || (OrderType()==OP_SELLLIMIT) || (OrderType()==OP_SELLSTOP))
+      {
+          bought_lots += OrderLots();
+          OrderClose(OrderTicket(),OrderLots(),Ask,10,clrBlue); 
+      }
+   }
+   if(bought_lots < lots_to_be_bought)
+      OrderSend(Symbol(),OP_BUY, lots_to_be_bought-bought_lots, Ask, 3, 1000, 0,"combuy",4321,0, clrGreenYellow);
 }
 ///////////////////////relative number of lots in order
 double lots_in_order()
@@ -111,6 +161,19 @@ void OnTick()
 //                  logt1("Symbol() = ", Symbol()) ; // demo showing how to add paramters 
    if(Bars<60 || IsTradeAllowed()==false)
       return;
+   //just wait for new bar
+   static datetime Time0=0;
+   static int new_bar_tick_cnt=0;
+   if (Time0 == Time[0])
+      return(0);
+   if(new_bar_tick_cnt<1)
+   {
+      new_bar_tick_cnt++;
+      return(0);
+   }
+   Time0 = Time[0];
+   new_bar_tick_cnt=0;
+
 //--- calculate open orders by current symbol
 //BreakPoint();
    int zone = determine_zone();
@@ -123,18 +186,20 @@ void OnTick()
             break;
       case 1:    
          report_string("state 1");
-         double lots_in_need = default_lots_for_zone[MathAbs(zone)] - lots_in_order();
+         double lots_in_need = default_lots_for_zone(zone)-lots_in_order();
          if( lots_in_need != 0 )
          {  //need to buy/sell
             if( lots_in_need >0)
-               OrderSend(Symbol(),OP_BUY, lots_in_need, Ask, 3, 0, 1000,"comment",1234,0, clrBlue);
+               close_or_buy(lots_in_need);
+//               OrderSend(Symbol(),OP_BUY, lots_in_need, Ask, 3, 0, 1000,"comment",1234,0, clrBlue);
             else
-               OrderSend(Symbol(),OP_SELL, -lots_in_need, Bid, 3, 1000, 0,"comsell",4321,0, clrRed);
+               close_or_sell(-lots_in_need);
+//               OrderSend(Symbol(),OP_SELL, -lots_in_need, Bid, 3, 1000, 0,"comsell",4321,0, clrRed);
          }
          break;
    }
    prev_zone = zone;    
-   report_ints(zone,state_machine,10000*iCustom(NULL,0,"my_ind/my_trending",10,True, 0,1));//10, True,0,0));
+   report_ints(zone,state_machine,(int)temp);//10000*iCustom(NULL,0,"my_ind/my_trending",10,True, 0,2));//10, True,0,0));
 //   report_ints(zone,state_machine,10000*iMA(NULL,0,14,0,MODE_SMA, PRICE_TYPICAL,0));//"my_ind/my_trending",10,True, 0,0));//10, True,0,0));
 //---
 }
