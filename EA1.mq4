@@ -88,7 +88,7 @@ double default_lots_for_zone(int zone)
 int determine_zone()
 {
 //  double indicator = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,0);//!!
-  double indicator = iCustom(NULL,0,"my_ind/my_trending",0,1);//!!
+  double indicator = iCustom(NULL,0,"my_ind/my_trending",0,0);//!!
   temp = indicator;
    logb("my_trending=",DoubleToStr(indicator,8)) ;
    if(indicator < -level_2)
@@ -107,7 +107,7 @@ void close_or_sell(double lots_to_be_sold)
 {  //first try to close buy (pending or real orders)
    //then sell the remaining lots
    double sold_lots =0;
-   for(int order=0; order<OrdersTotal(); order++)
+   for(int order=OrdersTotal()-1; order>=0; order--)
    {
       if(OrderSelect(order,SELECT_BY_POS)==false) continue; 
       if((OrderType()==OP_BUY) || (OrderType()==OP_BUYLIMIT) || (OrderType()==OP_BUYSTOP))
@@ -124,7 +124,7 @@ void close_or_buy(double lots_to_be_bought)
 {  //first try to close sell (pending or real orders)
    //then buy the remaining lots
    double bought_lots =0;
-   for(int order=0; order<OrdersTotal(); order++)
+   for(int order=OrdersTotal()-1; order>=0; order--)
    {
       if(OrderSelect(order,SELECT_BY_POS)==false) continue; 
       if((OrderType()==OP_SELL) || (OrderType()==OP_SELLLIMIT) || (OrderType()==OP_SELLSTOP))
