@@ -134,7 +134,7 @@ void close_or_buy(double lots_to_be_bought)
       }
    }
    if(bought_lots < lots_to_be_bought)
-      OrderSend(Symbol(),OP_BUY, lots_to_be_bought-bought_lots, Ask, 3, 1000, 0,"combuy",4321,0, clrGreenYellow);
+      OrderSend(Symbol(),OP_BUY, lots_to_be_bought-bought_lots, Ask, 3, 0, 1000,"combuy",4321,0, clrGreenYellow);
 }
 ///////////////////////relative number of lots in order
 double lots_in_order()
