@@ -88,7 +88,7 @@ double default_lots_for_zone(int zone)
 int determine_zone()
 {
 //  double indicator = iCustom(NULL,0,"my_ind/my_trending", 10, True,0,0);//!!
-  double indicator = iCustom(NULL,0,"my_ind/my_trending",0,0);//!!
+  double indicator = iCustom(NULL,0,"my_ind/my_trending", False, 10, True, 10, 0,0);//!!
   temp = indicator;
    logb("my_trending=",DoubleToStr(indicator,8)) ;
    if(indicator < -level_2)
