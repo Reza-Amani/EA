@@ -43,7 +43,7 @@ void bottoms_arrays_append(double bottoms_price, int bottoms_bar)
    bottoms_price_array[0] = bottoms_price;
    bottoms_bar_array[0] = bottoms_bar;
 }
-void shift_bar_arrays()
+void increment_bar_arrays()
 {
    for(int i=_peaks_array_size-1; i>=0; i--)
    {
@@ -79,6 +79,7 @@ void peak_detector()
       case _look_for_top_state:
          if(High[3]==max(High[1],High[2],High[3],High[4],High[5]))
          {
+            tops_arrays_append(High[3],3);
             arrow_cnt++;
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_DOWN,0,Time[3], High[3]);   
             peak_detector_state_machine = _look_for_bottom_state;
@@ -87,6 +88,7 @@ void peak_detector()
       case _look_for_bottom_state:
          if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5]))
          {
+            bottoms_arrays_append(Low[3],3);
             arrow_cnt++;
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_UP,0,Time[3], Low[3]);   
             peak_detector_state_machine = _look_for_top_state;
@@ -95,6 +97,17 @@ void peak_detector()
    }
 
 }
+
+void new_position_check()
+{
+    if(bottoms_bar_array[0]==3)  //a new top just added
+      if(tops_bar_array[0]>3) //only if a newer top hasn't come up
+         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[2], 2*Open[0]-Low[2],"combuy",4321,0, clrGreenYellow);
+    if(tops_bar_array[0]==3)  //a new top just added
+      if(bottoms_bar_array[0]>3) //only if a newer top hasn't come up
+         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], 2*Open[0]-High[2],"comsell",4321,0, clrRed);
+}
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -128,7 +141,10 @@ void OnTick()
       return;
    Time0 = Time[0];
 
+   increment_bar_arrays();
    peak_detector();
+   if(OrdersTotal()==0)
+      new_position_check();
 
 //--- calculate open orders by current symbol
 //BreakPoint();
