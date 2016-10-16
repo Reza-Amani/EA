@@ -127,15 +127,17 @@ void new_position_check()
 
 void evaluate_positions()
 {
-   double highlowmaxave = ( max(High[2],High[1])+min(Low[2]+Low[1]) )/2;
+   double highlowmaxave = ( max(High[2],High[1])+min(Low[2],Low[1]) )/2;
    arrow_cnt++;
    if(bottoms_bar_array[0]==5)  
       if(highlowmaxave > Close[3])
+//      if(Close[1] > Close[3])
          ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], bottoms_price_array[0]);//a successful trade   
       else
          ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], bottoms_price_array[0]);//an unsuccessful trade   
    if(tops_bar_array[0]==5)  
       if(highlowmaxave < Close[3])
+//      if(Close[1] < Close[3])
          ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], tops_price_array[0]);//a successful trade   
       else
          ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], tops_price_array[0]);//an unsuccessful trade   
@@ -176,8 +178,8 @@ void OnTick()
 
    increment_bar_arrays();
    peak_detector();
-   if(OrdersTotal()==0)
-      new_position_check();
+//   if(OrdersTotal()==0)
+//      new_position_check();
    evaluate_positions();
 
 //--- calculate open orders by current symbol
