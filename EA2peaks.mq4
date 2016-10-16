@@ -130,15 +130,15 @@ void evaluate_positions()
    double highlowmaxave = ( max(High[2],High[1])+min(Low[2]+Low[1]) )/2;
    arrow_cnt++;
    if(bottoms_bar_array[0]==5)  
-      if(highlowmaxave > Open[2])
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], Low[5]);//a successful trade   
+      if(highlowmaxave > Close[3])
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], bottoms_price_array[0]);//a successful trade   
       else
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], Low[5]);//an unsuccessful trade   
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], bottoms_price_array[0]);//an unsuccessful trade   
    if(tops_bar_array[0]==5)  
-      if(highlowmaxave < Open[2])
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], High[5]);//a successful trade   
+      if(highlowmaxave < Close[3])
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], tops_price_array[0]);//a successful trade   
       else
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], High[5]);//an unsuccessful trade   
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], tops_price_array[0]);//an unsuccessful trade   
          
 }
 //+------------------------------------------------------------------+
