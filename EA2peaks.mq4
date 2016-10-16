@@ -77,7 +77,7 @@ void peak_detector()
    switch(peak_detector_state_machine)
    {
       case _look_for_top_state:
-         if(High[3]==max(High[1],High[2],High[3],High[4],High[5]))
+         if(High[3]==max(High[1],High[2],High[3],High[4],High[5],High[6]))
          {
             tops_arrays_append(High[3],3);
             arrow_cnt++;
@@ -86,7 +86,7 @@ void peak_detector()
          }
          break;
       case _look_for_bottom_state:
-         if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5]))
+         if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5],Low[6]))
          {
             bottoms_arrays_append(Low[3],3);
             arrow_cnt++;
@@ -101,11 +101,13 @@ void peak_detector()
 void new_position_check()
 {
     if(bottoms_bar_array[0]==3)  //a new top just added
-      if(tops_bar_array[0]>3) //only if a newer top hasn't come up
-         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[2], 2*Open[0]-Low[2],"combuy",4321,0, clrGreenYellow);
+//      if(tops_bar_array[0]>3) //only if a newer top hasn't come up
+//      if((High[1]>=High[2])&&(High[2]>=High[3]))
+         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 2*Open[0]-Low[3],"combuy",4321,0, clrGreenYellow);
     if(tops_bar_array[0]==3)  //a new top just added
-      if(bottoms_bar_array[0]>3) //only if a newer top hasn't come up
-         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], 2*Open[0]-High[2],"comsell",4321,0, clrRed);
+//      if(bottoms_bar_array[0]>3) //only if a newer top hasn't come up
+//      if((Low[1]<=Low[2])&&(Low[2]<=Low[3]))
+         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 2*Open[0]-High[3],"comsell",4321,0, clrRed);
 }
 
 //+------------------------------------------------------------------+
