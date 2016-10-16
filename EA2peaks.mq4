@@ -117,14 +117,30 @@ void new_position_check()
 {
     if(bottoms_bar_array[0]==3)  //a new top just added
 //      if(tops_bar_array[0]>3) //only if a newer top hasn't come up
-//      if((High[1]>=High[2])&&(High[2]>=High[3]))
+      if(High[1]>=High[2])
          OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 2*Open[0]-Low[3],"combuy",4321,0, clrGreenYellow);
     if(tops_bar_array[0]==3)  //a new top just added
 //      if(bottoms_bar_array[0]>3) //only if a newer top hasn't come up
-//      if((Low[1]<=Low[2])&&(Low[2]<=Low[3]))
+      if(Low[1]<=Low[2])
          OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 2*Open[0]-High[3],"comsell",4321,0, clrRed);
 }
 
+void evaluate_positions()
+{
+   double highlowmaxave = ( max(High[2],High[1])+min(Low[2]+Low[1]) )/2;
+   arrow_cnt++;
+   if(bottoms_bar_array[0]==5)  
+      if(highlowmaxave > Open[2])
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], Low[5]);//a successful trade   
+      else
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], Low[5]);//an unsuccessful trade   
+   if(tops_bar_array[0]==5)  
+      if(highlowmaxave < Open[2])
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], High[5]);//a successful trade   
+      else
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], High[5]);//an unsuccessful trade   
+         
+}
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -162,6 +178,7 @@ void OnTick()
    peak_detector();
    if(OrdersTotal()==0)
       new_position_check();
+   evaluate_positions();
 
 //--- calculate open orders by current symbol
 //BreakPoint();
