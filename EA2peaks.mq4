@@ -16,7 +16,7 @@ input double Lots          =1;
 /////////////////////////global variables
 int state_machine = 0;
 int peak_detector_state_machine = _look_for_top_state;
-double tops_price_array[_peaks_array_size]={0};
+double tops_price_array[_peaks_array_size]={1000};
 int tops_bar_array[_peaks_array_size]={-1};
 double bottoms_price_array[_peaks_array_size]={0};
 int bottoms_bar_array[_peaks_array_size]={-1};
@@ -77,6 +77,13 @@ void peak_detector()
    switch(peak_detector_state_machine)
    {
       case _look_for_top_state:
+         if(Low[1]<bottoms_price_array[0])  //disapproving last bottom because of a lower low taking over it
+         {
+            //TOCHECK: close potential buy, if it has not breached sl
+            //NOTE: disapproved bottom is not going to be removed
+            peak_detector_state_machine = _look_for_bottom_state;
+         }
+         else
          if(High[3]==max(High[1],High[2],High[3],High[4],High[5],High[6]))
          {
             tops_arrays_append(High[3],3);
@@ -86,6 +93,13 @@ void peak_detector()
          }
          break;
       case _look_for_bottom_state:
+         if(High[1]>tops_price_array[0])  //disapproving last top because of a higher high taking over it
+         {
+            //TOCHECK: close potential sell, if it has not breached sl
+            //NOTE: disapproved top is not going to be removed
+            peak_detector_state_machine = _look_for_top_state;
+         }
+         else
          if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5],Low[6]))
          {
             bottoms_arrays_append(Low[3],3);
@@ -93,6 +107,7 @@ void peak_detector()
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_UP,0,Time[3], Low[3]);   
             peak_detector_state_machine = _look_for_top_state;
          }
+         
          break;
    }
 
