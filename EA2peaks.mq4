@@ -77,13 +77,6 @@ void peak_detector()
    switch(peak_detector_state_machine)
    {
       case _look_for_top_state:
-         if(Low[1]<bottoms_price_array[0])  //disapproving last bottom because of a lower low taking over it
-         {
-            //TOCHECK: close potential buy, if it has not breached sl
-            //NOTE: disapproved bottom is not going to be removed
-            peak_detector_state_machine = _look_for_bottom_state;
-         }
-         else
          if(High[3]==max(High[1],High[2],High[3],High[4],High[5],High[6]))
          {
             tops_arrays_append(High[3],3);
@@ -91,20 +84,48 @@ void peak_detector()
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_DOWN,0,Time[3], High[3]);   
             peak_detector_state_machine = _look_for_bottom_state;
          }
-         break;
-      case _look_for_bottom_state:
-         if(High[1]>tops_price_array[0])  //disapproving last top because of a higher high taking over it
-         {
-            //TOCHECK: close potential sell, if it has not breached sl
-            //NOTE: disapproved top is not going to be removed
-            peak_detector_state_machine = _look_for_top_state;
-         }
          else
+         if( (High[2]==max(High[1],High[2],High[3],High[4],High[5]))   //early declaration of a top if next bar is strong
+            && ((High[1]<High[2])&&(Low[1]<Low[2]))
+               && (Close[1]<Open[1]) )
+               {
+                  tops_arrays_append(High[2],2);
+                  arrow_cnt++;
+                  ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_DOWN,0,Time[2], High[2]);   
+                  peak_detector_state_machine = _look_for_bottom_state;
+               }
+         else
+         if(Low[1]<bottoms_price_array[0])  //disapproving last bottom because of a lower low taking over it
+         {
+            //TOCHECK: close potential buy, if it has not breached sl
+            //NOTE: disapproved bottom is not going to be removed
+            peak_detector_state_machine = _look_for_bottom_state;
+         }
+         break;
+         
+      case _look_for_bottom_state:
          if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5],Low[6]))
          {
             bottoms_arrays_append(Low[3],3);
             arrow_cnt++;
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_UP,0,Time[3], Low[3]);   
+            peak_detector_state_machine = _look_for_top_state;
+         }
+         else
+         if( (Low[2]==min(Low[1],Low[2],Low[3],Low[4],Low[5]))   //early declaration of a bottom if next bar is strong
+            && ((High[1]>High[2])&&(Low[1]>Low[2]))
+               && (Close[1]>Open[1]) )
+               {
+                  bottoms_arrays_append(Low[2],2);
+                  arrow_cnt++;
+                  ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_UP,0,Time[2], Low[2]);   
+                  peak_detector_state_machine = _look_for_top_state;
+               }
+         else
+         if(High[1]>tops_price_array[0])  //disapproving last top because of a higher high taking over it
+         {
+            //TOCHECK: close potential sell, if it has not breached sl
+            //NOTE: disapproved top is not going to be removed
             peak_detector_state_machine = _look_for_top_state;
          }
          
@@ -132,15 +153,15 @@ void evaluate_positions()
    if(bottoms_bar_array[0]==5)  
       if(highlowmaxave > Close[3])
 //      if(Close[1] > Close[3])
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], bottoms_price_array[0]);//a successful trade   
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[3], bottoms_price_array[0]);//a successful trade   
       else
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], bottoms_price_array[0]);//an unsuccessful trade   
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[3], bottoms_price_array[0]);//an unsuccessful trade   
    if(tops_bar_array[0]==5)  
       if(highlowmaxave < Close[3])
 //      if(Close[1] < Close[3])
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[4], tops_price_array[0]);//a successful trade   
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[3], tops_price_array[0]);//a successful trade   
       else
-         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[4], tops_price_array[0]);//an unsuccessful trade   
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[3], tops_price_array[0]);//an unsuccessful trade   
          
 }
 //+------------------------------------------------------------------+
@@ -180,7 +201,7 @@ void OnTick()
    peak_detector();
 //   if(OrdersTotal()==0)
 //      new_position_check();
-   evaluate_positions();
+//   evaluate_positions();
 
 //--- calculate open orders by current symbol
 //BreakPoint();
