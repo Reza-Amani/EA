@@ -22,6 +22,7 @@ double bottoms_price_array[_peaks_array_size]={0};
 int bottoms_bar_array[_peaks_array_size]={-1};
 int peaks_array_index = 0;
 int arrow_cnt=0;
+int zone=0;
 /////////////////////////functions
 void tops_arrays_append(double top_price, int top_bar)
 {
@@ -136,14 +137,22 @@ void peak_detector()
 
 void new_position_check()
 {
-    if(bottoms_bar_array[0]==3)  //a new top just added
-//      if(tops_bar_array[0]>3) //only if a newer top hasn't come up
-      if(High[1]>=High[2])
-         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 2*Open[0]-Low[3],"combuy",4321,0, clrGreenYellow);
-    if(tops_bar_array[0]==3)  //a new top just added
-//      if(bottoms_bar_array[0]>3) //only if a newer top hasn't come up
-      if(Low[1]<=Low[2])
-         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 2*Open[0]-High[3],"comsell",4321,0, clrRed);
+   if(zone>0)  //buy zone
+   {
+      if(bottoms_bar_array[0]==2)  //an early bottom
+         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[2], 2*Open[0]-Low[2],"early buy",4321,0, clrBlue);
+      if(bottoms_bar_array[0]==3)  //a normal bottom
+         if( (High[1]>=High[2]) && (Low[1]>=Low[2]) )
+            OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 2*Open[0]-Low[3],"normal buy",4321,0, clrGreenYellow);
+   }
+   if(zone<0)  //sell zone
+   {
+      if(tops_bar_array[0]==2)  //an early top
+         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], 2*Open[0]-High[2],"early sell",4321,0, clrOrange);
+      if(tops_bar_array[0]==3)  //a normal top
+         if( (Low[1]<=Low[2]) && (High[1]<=High[2]) )
+            OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 2*Open[0]-High[3],"comsell",4321,0, clrRed);
+   }
 }
 
 void evaluate_positions()
@@ -163,6 +172,18 @@ void evaluate_positions()
       else
          ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[3], tops_price_array[0]);//an unsuccessful trade   
          
+}
+
+int determine_zone()
+{
+   int Zone=0;
+   if( (bottoms_price_array[0]>bottoms_price_array[1])
+      && (tops_price_array[0]>tops_price_array[1]) )
+         Zone += 1;
+   if( (bottoms_price_array[0]<bottoms_price_array[1])
+      && (tops_price_array[0]<tops_price_array[1]) )
+         Zone -= 1;
+   return Zone;
 }
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -199,8 +220,9 @@ void OnTick()
 
    increment_bar_arrays();
    peak_detector();
+   zone = determine_zone();
 //   if(OrdersTotal()==0)
-//      new_position_check();
+      new_position_check();
 //   evaluate_positions();
 
 //--- calculate open orders by current symbol
