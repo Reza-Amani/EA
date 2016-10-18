@@ -140,18 +140,18 @@ void new_position_check()
    if(zone>0)  //buy zone
    {
       if(bottoms_bar_array[0]==2)  //an early bottom
-         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[2], 2*Open[0]-Low[2],"early buy",4321,0, clrBlue);
+         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[2], 3*Open[0]-2*Low[2],"early buy",4321,0, clrBlue);
       if(bottoms_bar_array[0]==3)  //a normal bottom
          if( (High[1]>=High[2]) && (Low[1]>=Low[2]) )
-            OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 2*Open[0]-Low[3],"normal buy",4321,0, clrGreenYellow);
+            OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 3*Open[0]-2*Low[3],"normal buy",4321,0, clrGreenYellow);
    }
    if(zone<0)  //sell zone
    {
       if(tops_bar_array[0]==2)  //an early top
-         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], 2*Open[0]-High[2],"early sell",4321,0, clrOrange);
+         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], 3*Open[0]-2*High[2],"early sell",4321,0, clrOrange);
       if(tops_bar_array[0]==3)  //a normal top
          if( (Low[1]<=Low[2]) && (High[1]<=High[2]) )
-            OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 2*Open[0]-High[3],"comsell",4321,0, clrRed);
+            OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 3*Open[0]-2*High[3],"comsell",4321,0, clrRed);
    }
 }
 
