@@ -12,9 +12,11 @@
 #define _look_for_top_state 1
 #define _look_for_bottom_state 2
 //--- Inputs
-input double Lots          =1;
 input double tp_sl_factor =1;
+input double ind_use_ma =True;
+input double ind_use_cmo =True;
 /////////////////////////global variables
+double Lots          =1;
 int state_machine = 0;
 int peak_detector_state_machine = _look_for_top_state;
 double tops_price_array[_peaks_array_size]={1000};
@@ -79,7 +81,7 @@ void peak_detector()
    switch(peak_detector_state_machine)
    {
       case _look_for_top_state:
-         if(High[3]==max(High[1],High[2],High[3],High[4],High[5],High[6]))
+         if(High[3]==max(High[1],High[2],High[3],High[4],High[5]))
          {
             tops_arrays_append(High[3],3);
             arrow_cnt++;
@@ -106,7 +108,7 @@ void peak_detector()
          break;
          
       case _look_for_bottom_state:
-         if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5],Low[6]))
+         if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5]))
          {
             bottoms_arrays_append(Low[3],3);
             arrow_cnt++;
@@ -184,6 +186,18 @@ int determine_zone()
    if( (bottoms_price_array[0]<bottoms_price_array[1])
       && (tops_price_array[0]<tops_price_array[1]) )
          Zone -= 1;
+         
+   double indicator1 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_use_cmo, 10, 0,1);
+   double indicator2 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_use_cmo, 10, 0,2);
+   double indicator3 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_use_cmo, 10, 0,3);
+   if(indicator1>0)
+      if(indicator2>=0)
+         if(indicator3>=0)
+            Zone += 1;
+   if(indicator1<0)
+      if(indicator2<=0)
+         if(indicator3<=0)
+            Zone -= 1;
    return Zone;
 }
 //+------------------------------------------------------------------+
@@ -210,7 +224,7 @@ void OnDeinit(const int reason)
 void OnTick()
   {   
   
-   if(Bars<5 || IsTradeAllowed()==false)
+   if(Bars<6 || IsTradeAllowed()==false)
       return;
    //just wait for new bar
    static datetime Time0=0;
