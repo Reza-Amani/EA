@@ -12,11 +12,13 @@
 #define _look_for_top_state 1
 #define _look_for_bottom_state 2
 //--- Inputs
+input double Lots          =0.01;
 input double tp_sl_factor =1;
 input double ind_use_ma =True;
+input int ind_ima_base =10;
 input double ind_use_cmo =True;
+input int ind_cmo_len =14;
 /////////////////////////global variables
-double Lots          =1;
 int state_machine = 0;
 int peak_detector_state_machine = _look_for_top_state;
 double tops_price_array[_peaks_array_size]={1000};
@@ -187,9 +189,9 @@ int determine_zone()
       && (tops_price_array[0]<tops_price_array[1]) )
          Zone -= 1;
          
-   double indicator1 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_use_cmo, 10, 0,1);
-   double indicator2 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_use_cmo, 10, 0,2);
-   double indicator3 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_use_cmo, 10, 0,3);
+   double indicator1 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_ima_base, ind_use_cmo, 10, ind_cmo_len, 0,1);
+   double indicator2 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_ima_base, ind_use_cmo, 10, ind_cmo_len, 0,2);
+   double indicator3 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_ima_base, ind_use_cmo, 10, ind_cmo_len, 0,3);
    if(indicator1>0)
       if(indicator2>=0)
          if(indicator3>=0)
