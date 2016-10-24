@@ -12,16 +12,22 @@
 #define _look_for_top_state 1
 #define _look_for_bottom_state 2
 //--- Inputs
-input double Lots          =1;
+input double Lots          =0.01;
+input double tp_sl_factor =1;
+input double ind_use_ma =True;
+input int ind_ima_base =10;
+input double ind_use_cmo =True;
+input int ind_cmo_len =14;
 /////////////////////////global variables
 int state_machine = 0;
 int peak_detector_state_machine = _look_for_top_state;
-double tops_price_array[_peaks_array_size]={0};
+double tops_price_array[_peaks_array_size]={1000};
 int tops_bar_array[_peaks_array_size]={-1};
 double bottoms_price_array[_peaks_array_size]={0};
 int bottoms_bar_array[_peaks_array_size]={-1};
 int peaks_array_index = 0;
 int arrow_cnt=0;
+int zone=0;
 /////////////////////////functions
 void tops_arrays_append(double top_price, int top_bar)
 {
@@ -77,22 +83,58 @@ void peak_detector()
    switch(peak_detector_state_machine)
    {
       case _look_for_top_state:
-         if(High[3]==max(High[1],High[2],High[3],High[4],High[5],High[6]))
+         if(High[3]==max(High[1],High[2],High[3],High[4],High[5]))
          {
             tops_arrays_append(High[3],3);
             arrow_cnt++;
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_DOWN,0,Time[3], High[3]);   
             peak_detector_state_machine = _look_for_bottom_state;
          }
+         else
+         if( (High[2]==max(High[1],High[2],High[3],High[4],High[5]))   //early declaration of a top if next bar is strong
+            && ((High[1]<High[2])&&(Low[1]<Low[2]))
+               && (Close[1]<Open[1]) )
+               {
+                  tops_arrays_append(High[2],2);
+                  arrow_cnt++;
+                  ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_DOWN,0,Time[2], High[2]);   
+                  peak_detector_state_machine = _look_for_bottom_state;
+               }
+         else
+         if(Low[1]<bottoms_price_array[0])  //disapproving last bottom because of a lower low taking over it
+         {
+            //TOCHECK: close potential buy, if it has not breached sl
+            //NOTE: disapproved bottom is not going to be removed
+            peak_detector_state_machine = _look_for_bottom_state;
+         }
          break;
+         
       case _look_for_bottom_state:
-         if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5],Low[6]))
+         if(Low[3]==min(Low[1],Low[2],Low[3],Low[4],Low[5]))
          {
             bottoms_arrays_append(Low[3],3);
             arrow_cnt++;
             ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_UP,0,Time[3], Low[3]);   
             peak_detector_state_machine = _look_for_top_state;
          }
+         else
+         if( (Low[2]==min(Low[1],Low[2],Low[3],Low[4],Low[5]))   //early declaration of a bottom if next bar is strong
+            && ((High[1]>High[2])&&(Low[1]>Low[2]))
+               && (Close[1]>Open[1]) )
+               {
+                  bottoms_arrays_append(Low[2],2);
+                  arrow_cnt++;
+                  ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_UP,0,Time[2], Low[2]);   
+                  peak_detector_state_machine = _look_for_top_state;
+               }
+         else
+         if(High[1]>tops_price_array[0])  //disapproving last top because of a higher high taking over it
+         {
+            //TOCHECK: close potential sell, if it has not breached sl
+            //NOTE: disapproved top is not going to be removed
+            peak_detector_state_machine = _look_for_top_state;
+         }
+         
          break;
    }
 
@@ -100,16 +142,66 @@ void peak_detector()
 
 void new_position_check()
 {
-    if(bottoms_bar_array[0]==3)  //a new top just added
-//      if(tops_bar_array[0]>3) //only if a newer top hasn't come up
-//      if((High[1]>=High[2])&&(High[2]>=High[3]))
-         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], 2*Open[0]-Low[3],"combuy",4321,0, clrGreenYellow);
-    if(tops_bar_array[0]==3)  //a new top just added
-//      if(bottoms_bar_array[0]>3) //only if a newer top hasn't come up
-//      if((Low[1]<=Low[2])&&(Low[2]<=Low[3]))
-         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], 2*Open[0]-High[3],"comsell",4321,0, clrRed);
+   if(zone>0)  //buy zone
+   {
+      if(bottoms_bar_array[0]==2)  //an early bottom
+         OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[2], Open[0]+(Open[0]-Low[2])*tp_sl_factor,"early buy",4321,0, clrBlue);
+      if(bottoms_bar_array[0]==3)  //a normal bottom
+         if( (High[1]>=High[2]) && (Low[1]>=Low[2]) )
+            OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], Open[0]+(Open[0]-Low[3])*tp_sl_factor,"normal buy",4321,0, clrGreenYellow);
+   }
+   if(zone<0)  //sell zone
+   {
+      if(tops_bar_array[0]==2)  //an early top
+         OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], Open[0]+(Open[0]-High[2])*tp_sl_factor,"early sell",4321,0, clrOrange);
+      if(tops_bar_array[0]==3)  //a normal top
+         if( (Low[1]<=Low[2]) && (High[1]<=High[2]) )
+            OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], Open[0]+(Open[0]-High[3])*tp_sl_factor,"comsell",4321,0, clrRed);
+   }
 }
 
+void evaluate_positions()
+{
+   double highlowmaxave = ( max(High[2],High[1])+min(Low[2],Low[1]) )/2;
+   arrow_cnt++;
+   if(bottoms_bar_array[0]==5)  
+      if(highlowmaxave > Close[3])
+//      if(Close[1] > Close[3])
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[3], bottoms_price_array[0]);//a successful trade   
+      else
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[3], bottoms_price_array[0]);//an unsuccessful trade   
+   if(tops_bar_array[0]==5)  
+      if(highlowmaxave < Close[3])
+//      if(Close[1] < Close[3])
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_CHECK,0,Time[3], tops_price_array[0]);//a successful trade   
+      else
+         ObjectCreate(IntegerToString(arrow_cnt),OBJ_ARROW_STOP,0,Time[3], tops_price_array[0]);//an unsuccessful trade   
+         
+}
+
+int determine_zone()
+{
+   int Zone=0;
+   if( (bottoms_price_array[0]>bottoms_price_array[1])
+      && (tops_price_array[0]>tops_price_array[1]) )
+         Zone += 1;
+   if( (bottoms_price_array[0]<bottoms_price_array[1])
+      && (tops_price_array[0]<tops_price_array[1]) )
+         Zone -= 1;
+         
+   double indicator1 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_ima_base, ind_use_cmo, 10, ind_cmo_len, 0,1);
+   double indicator2 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_ima_base, ind_use_cmo, 10, ind_cmo_len, 0,2);
+   double indicator3 = iCustom(NULL,0,"my_ind/my_trending", ind_use_ma, 10, ind_ima_base, ind_use_cmo, 10, ind_cmo_len, 0,3);
+   if(indicator1>0)
+      if(indicator2>=0)
+         if(indicator3>=0)
+            Zone += 1;
+   if(indicator1<0)
+      if(indicator2<=0)
+         if(indicator3<=0)
+            Zone -= 1;
+   return Zone;
+}
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -134,7 +226,7 @@ void OnDeinit(const int reason)
 void OnTick()
   {   
   
-   if(Bars<5 || IsTradeAllowed()==false)
+   if(Bars<6 || IsTradeAllowed()==false)
       return;
    //just wait for new bar
    static datetime Time0=0;
@@ -145,8 +237,10 @@ void OnTick()
 
    increment_bar_arrays();
    peak_detector();
-   if(OrdersTotal()==0)
+   zone = determine_zone();
+//   if(OrdersTotal()==0)
       new_position_check();
+//   evaluate_positions();
 
 //--- calculate open orders by current symbol
 //BreakPoint();
