@@ -11,7 +11,9 @@
 ///////////////////////////////inputs
 //--- Inputs
 input double i_Lots         =0.1;
-input double i_tp_sl_factor =0.5;
+//input double i_tp_sl_factor =1;
+input double iTP_factor =1;
+input double iSL_factor =1;
 input double i_filtered_q_thresh =2;
 input double i_order_thresh =0.9;
 ///////////////////////////////debug
@@ -64,7 +66,18 @@ void BreakPoint()
    keybd_event(19,0,2,0);
 }
 ///////////////////////////////////////////////////////////
-
+void calculate_TP_SL_buy(double &top, double &bottom, double current)
+{
+   double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
+   bottom = current-average_bar_size*iSL_factor;
+   top = current+average_bar_size*iTP_factor;
+}
+void calculate_TP_SL_sell(double &bottom, double &top, double current)
+{
+   double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
+   bottom = current-average_bar_size*iTP_factor;
+   top = current+average_bar_size*iSL_factor;
+}
 //------------------------------------------------functions
 void new_position_check()
 {
@@ -78,19 +91,26 @@ void new_position_check()
    {
       if(ind_order>i_order_thresh)   //order zone suitable for buy
       {
+         double bottom_base=Low[2];
+         double top_base = High[2] ;
+         calculate_TP_SL_buy(top_base, bottom_base, Open[0]);
          if(ind_peak_at2<0)   
-            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, Low[2], Open[0]+(Open[0]-Low[2])*i_tp_sl_factor,"normal buy",4321,0, clrGreenYellow);
+//            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, Low[2], Open[0]+(Open[0]-Low[2])*i_tp_sl_factor,"normal buy",4321,0, clrGreenYellow);
+            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, bottom_base, top_base,"normal buy",4321,0, clrGreenYellow);
          if(ind_peak_at3<0)
             if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
-              OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, Low[3], Open[0]+(Open[0]-Low[3])*i_tp_sl_factor,"normal buy",4321,0, clrGreenYellow);
+              OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, bottom_base, top_base,"normal buy",4321,0, clrGreenYellow);
       }
       if(ind_order<-i_order_thresh)   //order zone suitable for sell
       {
+         double bottom_base=Low[2];
+         double top_base = High[2] ;
+         calculate_TP_SL_sell(bottom_base, top_base, Open[0]);
          if(ind_peak_at2>0)
-            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, High[2], Open[0]+(Open[0]-High[2])*i_tp_sl_factor,"normal sell",4321,0, clrGreenYellow);
+            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, top_base, bottom_base,"normal sell",4321,0, clrGreenYellow);
          if(ind_peak_at3>0)
             if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
-              OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, High[3], Open[0]+(Open[0]-High[3])*i_tp_sl_factor,"normal sell",4321,0, clrGreenYellow);
+              OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, top_base, bottom_base,"normal sell",4321,0, clrGreenYellow);
       }  
    }       
 
