@@ -156,7 +156,7 @@ void new_position_check()
          OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[2], Open[0]+(Open[0]-High[2])*tp_sl_factor,"early sell",4321,0, clrOrange);
       if(tops_bar_array[0]==3)  //a normal top
          if( (Low[1]<=Low[2]) && (High[1]<=High[2]) )
-            OrderSend(Symbol(),OP_SELL, Lots, Bid, 3, High[3], Open[0]+(Open[0]-High[3])*tp_sl_factor,"comsell",4321,0, clrRed);
+            OrderSend(Symbol(),OP_BUY, Lots, Ask, 3, Low[3], Open[0]+(Open[0]-Low[3])*tp_sl_factor,"normal buy",4321,0, clrGreenYellow);
    }
 }
 
