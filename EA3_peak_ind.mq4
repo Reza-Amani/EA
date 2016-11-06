@@ -124,19 +124,23 @@ void new_position_check()
          {
             calculate_TP_SL_buy(sl, tp);
             if(ind_peak_at2<0)   
-               OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
+//               OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
+               OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, tp, sl,"normal buy",4321,0, clrGreenYellow);   //insane trade!
             if(ind_peak_at3<0)
                if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
-                 OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
+//                 OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
+                     OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, tp, sl,"normal buy",4321,0, clrGreenYellow);   //insane trade!
          }
          if(ind_order<-i_order_thresh)   //order zone suitable for sell
          {
             calculate_TP_SL_sell(sl, tp);
             if(ind_peak_at2>0)
-               OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
+//               OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
+               OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, tp, sl,"normal buy",4321,0, clrGreenYellow);//insane trade!
             if(ind_peak_at3>0)
                if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
-                 OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
+//                 OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
+                   OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, tp, sl,"normal buy",4321,0, clrGreenYellow);  //insane trade!
          }  
       }       
 
