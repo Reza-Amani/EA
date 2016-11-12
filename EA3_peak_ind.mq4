@@ -14,9 +14,9 @@ input double i_Lots         =0.1;
 //input double i_tp_sl_factor =1;
 input double iTP_factor =1;
 input double iSL_factor =1;
-input double i_filtered_q_thresh =1.5;
-input double i_order_thresh =0.9;
-input double i_filtered_clearance_thresh =1.5;
+input double i_filtered_q_thresh =2.5;
+input double i_order_thresh =1.9;
+input double i_filtered_clearance_thresh =1.8;
 ///////////////////////////////debug
 void report_ints(int p1, int p2, int p3)
 {
