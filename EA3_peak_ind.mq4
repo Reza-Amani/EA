@@ -14,8 +14,9 @@ input double i_Lots         =0.1;
 //input double i_tp_sl_factor =1;
 input double iTP_factor =1;
 input double iSL_factor =1;
-input double i_filtered_q_thresh =2;
-input double i_order_thresh =0.9;
+input double i_filtered_q_thresh =2.5;
+input double i_order_thresh =1.9;
+input double i_filtered_clearance_thresh =1.8;
 ///////////////////////////////debug
 void report_ints(int p1, int p2, int p3)
 {
@@ -113,29 +114,31 @@ void new_position_check()
    double ind_peak_at3 = iCustom(NULL,0,"my_ind/my_peaks", 3,3);
    double ind_order = iCustom(NULL,0,"my_ind/my_peaks", 0,0);
    double ind_filtered_quality = iCustom(NULL,0,"my_ind/my_peaks", 2,0);
+   double ind_filtered_clearance = iCustom(NULL,0,"my_ind/my_peaks", 5,0);
 //   report_ints(ind_peak_at2,ind_peak_at3,ind_order);//10000*iCustom(NULL,0,"my_ind/my_trending",10,True, 0,2));//10, True,0,0));
    double sl,tp;
-   if(ind_filtered_quality>i_filtered_q_thresh) //chart is generaly well-behaved
-   {
-      if(ind_order>i_order_thresh)   //order zone suitable for buy
+   if(ind_filtered_clearance>i_filtered_clearance_thresh)
+      if(ind_filtered_quality>i_filtered_q_thresh) //chart is generaly well-behaved
       {
-         calculate_TP_SL_buy(sl, tp);
-         if(ind_peak_at2<0)   
-            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
-         if(ind_peak_at3<0)
-            if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
-              OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
-      }
-      if(ind_order<-i_order_thresh)   //order zone suitable for sell
-      {
-         calculate_TP_SL_sell(sl, tp);
-         if(ind_peak_at2>0)
-            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
-         if(ind_peak_at3>0)
-            if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
-              OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
-      }  
-   }       
+         if(ind_order>i_order_thresh)   //order zone suitable for buy
+         {
+            calculate_TP_SL_buy(sl, tp);
+            if(ind_peak_at2<0)   
+               OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
+            if(ind_peak_at3<0)
+               if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
+                 OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, sl, tp,"normal buy",4321,0, clrGreenYellow);
+         }
+         if(ind_order<-i_order_thresh)   //order zone suitable for sell
+         {
+            calculate_TP_SL_sell(sl, tp);
+            if(ind_peak_at2>0)
+               OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
+            if(ind_peak_at3>0)
+               if((High[2]<High[1])&&(Low[2]<Low[1])&&(Open[2]<Open[1]))
+                 OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, sl, tp,"normal sell",4321,0, clrGreenYellow);
+         }  
+      }       
 
 }
 //+------------------------------------------------------------------+
