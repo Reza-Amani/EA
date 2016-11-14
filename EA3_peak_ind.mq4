@@ -12,8 +12,10 @@
 //--- Inputs
 input double i_Lots         =0.1;
 //input double i_tp_sl_factor =1;
-input double iTP_factor =1;
-input double iSL_factor =1;
+input double iTP_factor =3;   
+   //how many times of ave bar far from last peak
+input double iSL_factor =0; 
+   //how many times of ave bar far from last peak, negative for further sl
 input double i_filtered_q_thresh =2.5;
 input double i_order_thresh =1.9;
 input double i_filtered_clearance_thresh =1.8;
@@ -91,22 +93,38 @@ double min(double v1, double v2=1000, double v3=1000, double v4=1000, double v5=
 void calculate_TP_SL_buy(double &_sl, double &_tp)
 {
    double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
-   if(iSL_factor==0)
-      _sl = min(Low[1],Low[2],Low[3]);
-   else
-      _sl = Open[0]-average_bar_size*iSL_factor;
-   _tp = Open[0]+average_bar_size*iTP_factor;
+   _sl = min(Low[1],Low[2],Low[3])+average_bar_size*iSL_factor;
+   _tp = min(Low[1],Low[2],Low[3])+average_bar_size*iTP_factor;
 }
 void calculate_TP_SL_sell(double &_sl, double &_tp)
 {
    double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
-   if(iSL_factor==0)
-      _sl = max(High[1],High[2],High[3]);
-   else
-      _sl = Open[0]+average_bar_size*iSL_factor;
-   _tp = Open[0]-average_bar_size*iTP_factor;
+   _sl = max(High[1],High[2],High[3])-average_bar_size*iSL_factor;
+   _tp = max(High[1],High[2],High[3])-average_bar_size*iTP_factor;
 }
 //------------------------------------------------functions
+void trailing_stop()
+{
+   double temp_sl,temp_tp,temp_sl_change;
+   for(int i=0; i<OrdersTotal(); i++)
+   {
+      if(OrderSelect(i,SELECT_BY_POS)==false) continue; 
+      if(OrderType()==OP_BUY)
+      {
+         calculate_TP_SL_buy(temp_sl,temp_tp);
+         temp_sl_change = temp_sl-OrderStopLoss();
+         if(temp_sl_change>0)
+            OrderModify(OrderTicket(),OrderOpenPrice(),OrderStopLoss()+temp_sl_change,OrderTakeProfit()+temp_sl_change/2,0,Yellow); 
+      }
+      else if(OrderType()==OP_SELL)
+      {
+         calculate_TP_SL_sell(temp_sl,temp_tp);
+         temp_sl_change = temp_sl-OrderStopLoss();
+         if(temp_sl_change<0)
+            OrderModify(OrderTicket(),OrderOpenPrice(),OrderStopLoss()+temp_sl_change,OrderTakeProfit()+temp_sl_change/2,0,Yellow); 
+      }
+   }
+}
 void new_position_check()
 {
 
@@ -156,6 +174,7 @@ void OnTick()
    Time0 = Time[0];
 
    new_position_check();
+   trailing_stop();
   }
 //------------------------------------------default functions
 int OnInit()
