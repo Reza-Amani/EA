@@ -99,7 +99,7 @@ void calculate_TP_SL_sell(double &_sl, double &_tp)
    double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
    _sl = max(High[1],High[2],High[3])-average_bar_size*iSL_factor;
 //   _tp = max(High[1],High[2],High[3])-average_bar_size*iTP_factor;
-   _tp = 2*Low[1]-Low[2] + max(High[1],High[2],High[3])-average_bar_size*iTP_factor;
+   _tp = 2*Low[1]-Low[2] - average_bar_size*iTP_factor;
 }
 //------------------------------------------------functions
 void trailing_stop()
