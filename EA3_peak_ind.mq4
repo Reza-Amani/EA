@@ -11,14 +11,11 @@
 ///////////////////////////////inputs
 //--- Inputs
 input double i_Lots         =0.1;
-//input double i_tp_sl_factor =1;
-input double iTP_factor =3;   
-   //how many times of ave bar far from last peak
+input double iTP_factor =1;   
 input double iSL_factor =0; 
-   //how many times of ave bar far from last peak, negative for further sl
-input double i_filtered_q_thresh =2.5;
-input double i_order_thresh =1.9;
-input double i_filtered_clearance_thresh =1.8;
+input double i_filtered_q_thresh =2;
+input double i_order_thresh =2.9;
+input double i_filtered_clearance_thresh =2;
 ///////////////////////////////debug
 void report_ints(int p1, int p2, int p3)
 {
@@ -94,13 +91,15 @@ void calculate_TP_SL_buy(double &_sl, double &_tp)
 {
    double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
    _sl = min(Low[1],Low[2],Low[3])+average_bar_size*iSL_factor;
-   _tp = min(Low[1],Low[2],Low[3])+average_bar_size*iTP_factor;
+//   _tp = min(Low[1],Low[2],Low[3])+average_bar_size*iTP_factor;
+   _tp = 2*High[1]-High[2] + average_bar_size*iTP_factor;
 }
 void calculate_TP_SL_sell(double &_sl, double &_tp)
 {
    double average_bar_size = (High[1]-Low[1] + High[2]-Low[2] + High[3]-Low[3] + High[4]-Low[4] + High[5]-Low[5])/5; 
    _sl = max(High[1],High[2],High[3])-average_bar_size*iSL_factor;
-   _tp = max(High[1],High[2],High[3])-average_bar_size*iTP_factor;
+//   _tp = max(High[1],High[2],High[3])-average_bar_size*iTP_factor;
+   _tp = 2*Low[1]-Low[2] + max(High[1],High[2],High[3])-average_bar_size*iTP_factor;
 }
 //------------------------------------------------functions
 void trailing_stop()
