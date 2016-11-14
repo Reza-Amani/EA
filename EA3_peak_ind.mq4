@@ -102,6 +102,17 @@ void calculate_TP_SL_sell(double &_sl, double &_tp)
    _tp = 2*Low[1]-Low[2] - average_bar_size*iTP_factor;
 }
 //------------------------------------------------functions
+void    check_close_positions()
+{
+   for(int i=0; i<OrdersTotal(); i++)
+   {
+      if(OrderSelect(i,SELECT_BY_POS)==false) continue; 
+      if(OrderType()==OP_BUY) 
+         OrderClose(OrderTicket(),OrderLots(),Bid,3);
+      else if(OrderType()==OP_SELL)
+         OrderClose(OrderTicket(),OrderLots(),Ask,3);
+   }
+}
 void trailing_stop()
 {
    double temp_sl,temp_tp,temp_sl_change;
@@ -172,6 +183,7 @@ void OnTick()
       return;
    Time0 = Time[0];
 
+   check_close_positions();
    new_position_check();
    trailing_stop();
   }
