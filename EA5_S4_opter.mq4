@@ -17,15 +17,9 @@ input int iMA_short_len = 20;
 input bool use_ROC_confirm = True;
 input int ROC_period = 13;
 input int ROC_MA_per = 10;
+input double use_RSI_enter = True;
+input int RSI_len = 10;
 
-/*input int opt_len = 200;
-input bool type_fuzzy = False;
-input int iMA_len_0 =3;
-input int iMA_len_1 =5;
-input int iMA_len_2 =8;
-input int iMA_len_3 =12;
-input int iMA_len_4 =15;
-*/
 ///////////////////////////////debug
 void report_ints(int p1, int p2, int p3)
 {
@@ -124,7 +118,8 @@ double lots_in_order()
 
 void positions_check(int ima)
 {
-   double sig = iCustom(NULL,0,"my_ind/S4_opter/1siggen_S4", type_fuzzy, iMA_short_len,use_ROC_confirm,ROC_period,ROC_MA_per, 0, 0);
+   double sig = iCustom(NULL,0,"my_ind/S4_opter/1siggen_S4", type_fuzzy, iMA_short_len,use_ROC_confirm,
+         ROC_period,ROC_MA_per,use_RSI_enter,RSI_len, 0, 0);
    double current_lots = lots_in_order();
    
 //   report_ints(ima,(int)10*sig,(int)10*current_lots);
