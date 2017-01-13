@@ -119,10 +119,10 @@ double lots_in_order()
 void positions_check(int ima)
 {
    double sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1siggen_S4", type_fuzzy, iMA_short_len,use_ROC_confirm,
-         ROC_period,ROC_MA_per,use_RSI_enter,RSI_len, 1, 0);
+         ROC_period,ROC_MA_per,use_RSI_enter,RSI_len, 0, 0);
    double current_lots = lots_in_order();
    
-   Comment("comment test:", 22, "sig :", sig);
+//   Comment("comment test:", 22, "sig :", sig);
 
    if(sig*current_lots>0)
    {  //already have open trades
@@ -137,9 +137,9 @@ void positions_check(int ima)
    }
 //   report_string("go trade");
 //   report_ints(ima,(int)10*sig,(int)10*current_lots);
-   if(sig>2)
+   if(sig>=1)
       OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
-   if(sig<-2)
+   if(sig<=-1)
       OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
 }
 //+------------------------------------------------------------------+
