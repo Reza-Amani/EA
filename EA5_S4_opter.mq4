@@ -118,8 +118,14 @@ double lots_in_order()
 
 void positions_check(int ima)
 {
-   double sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1siggen_S4", type_fuzzy, iMA_short_len,use_ADX_confirm,
+   double sig;
+   if(type_fuzzy)
+      sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1sigForEA_S4", type_fuzzy, iMA_short_len,use_ADX_confirm,
          ADX_period,ADX_level,use_RSI_enter,RSI_len, 0, 0);
+   else
+      sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1siggen_S4", type_fuzzy, iMA_short_len,use_ADX_confirm,
+         ADX_period,ADX_level,use_RSI_enter,RSI_len, 0, 0);
+
    double current_lots = lots_in_order();
    
 //   Comment("comment test:", 22, "sig :", sig);
