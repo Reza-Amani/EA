@@ -12,7 +12,7 @@
 //--- Inputs
 input double i_Lots         =1;
 
-input bool type_fuzzy = False;
+input bool use_adaptive = False;
 input int iMA_short_len = 20;
 input bool use_ADX_confirm = True;
 input int ADX_period = 20;
@@ -72,24 +72,6 @@ void BreakPoint()
 ///////////////////////////////////////////////////////////
 
 //------------------------------------------------functions
-int get_opt_ima()
-{
-      //return iMA_len_1;
-
-//TODO: modify for S4
-return 0;
-/*   int opt_index = (int)iCustom(NULL,0,"my_ind/IMA_opter/my_IMA_opt", opt_len,type_fuzzy,iMA_len_0,iMA_len_1,iMA_len_2,iMA_len_3,iMA_len_4, 0,0);
-   switch(opt_index)
-   {
-      case 1: return iMA_len_0;
-      case 2: return iMA_len_1;
-      case 3: return iMA_len_2;
-      case 4: return iMA_len_3;
-      case 5: return iMA_len_4;
-      default: return 0;
-   }
-*/
-}
 void    close_positions()
 {
    for(int i=0; i<OrdersTotal(); i++)
@@ -116,19 +98,20 @@ double lots_in_order()
    return lots;
 }
 
-void positions_check(int ima)
+void positions_check()
 {
    double sig;
-   if(type_fuzzy)
-      sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1sigForEA_S4", type_fuzzy, iMA_short_len,use_ADX_confirm,
+   if(use_adaptive)
+      sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1sigForEA_S4", iMA_short_len,use_ADX_confirm,
          ADX_period,ADX_level,use_RSI_enter,RSI_len, 0, 0);
    else
-      sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1siggen_S4", type_fuzzy, iMA_short_len,use_ADX_confirm,
+      sig = iCustom(Symbol(), Period(),"my_ind/S4_opter/1siggen_S4", iMA_short_len,use_ADX_confirm,
          ADX_period,ADX_level,use_RSI_enter,RSI_len, 0, 0);
 
    double current_lots = lots_in_order();
    
-//   Comment("comment test:", 22, "sig :", sig);
+   Comment("ima:",iCustom(Symbol(), Period(),"my_ind/S4_opter/1sigForEA_S4", iMA_short_len,use_ADX_confirm,
+         ADX_period,ADX_level,use_RSI_enter,RSI_len, 2, 0));
 
    if(sig*current_lots>0)
    {  //already have open trades
@@ -161,21 +144,7 @@ void OnTick()
    if (Time0 == Time[0])
       return;
    Time0 = Time[0];
-
-   positions_check(0);
-/*   int opt_iMA_len = get_opt_ima();
-   if(opt_iMA_len == 0)
-   {
-//      report_string("no positions");
-      close_positions();
-   }
-   else 
-   {
-      positions_check(opt_iMA_len);
-//      report_string("positions check");
-//      BreakPoint();
-   }
-*/
+   positions_check();
   }
 //------------------------------------------default functions
 int OnInit()
