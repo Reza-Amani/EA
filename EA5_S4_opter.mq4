@@ -103,9 +103,6 @@ void positions_check()
       ADX_period,ADX_level,use_RSI_enter,RSI_len, 0, 0);
 
    double current_lots = lots_in_order();
-   
-   Comment("ima:",iCustom(Symbol(), Period(),"my_ind/S4_opter/1sigForEA_S4", iMA_short_len,use_ADX_confirm,
-         ADX_period,ADX_level,use_RSI_enter,RSI_len, 2, 0));
 
    if(sig*current_lots>0)  //already have open trades
       return;
