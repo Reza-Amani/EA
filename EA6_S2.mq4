@@ -29,9 +29,9 @@ void check_opening()
    sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
 
-   if(sig > 5)  
+   if(sig >= 6)  
       OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
-   if(sig < -5)  
+   if(sig <= -6)  
       OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
 }
 
@@ -45,10 +45,10 @@ void check_closing()
    double current_lots = lots_in_order();
    
    if(current_lots>0)
-      if(sig < 5)  
+      if(sig <= 4)  
          close_positions();
    if(current_lots<0)
-      if(sig > -5)  
+      if(sig >= -4)  
          close_positions();
 }
 
@@ -82,7 +82,7 @@ double lots_in_order()
 //+------------------------------------------------------------------+
 void OnTick()
   {
-   if(Bars<110 || IsTradeAllowed()==false)
+   if( /*Bars<110 ||*/ IsTradeAllowed()==false)
       return;
    //just wait for new bar
    static datetime Time0=0;
