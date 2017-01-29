@@ -28,7 +28,7 @@ void check_opening()
    double sig;
    sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
-
+   Comment("opening, sig= ",sig);
    if(sig >= 6)  
       OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
    if(sig <= -6)  
@@ -40,6 +40,7 @@ void check_closing()
    double sig;
    sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
+   Comment("closing, sig= ",sig);
 
 
    double current_lots = lots_in_order();
