@@ -29,6 +29,9 @@ void check_opening()
    sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
    Comment("opening, sig= ",sig);
+//   Comment("ADX,D+,D_ : = ",iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MAIN, 0)
+//   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_PLUSDI, 0)
+//   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MINUSDI, 0));
    if(sig >= 6)  
       OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
    if(sig <= -6)  
@@ -41,15 +44,18 @@ void check_closing()
    sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
    Comment("closing, sig= ",sig);
+//   Comment("ADX,D+,D_ : = ",iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MAIN, 0)
+//   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_PLUSDI, 0)
+//   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MINUSDI, 0));
 
 
    double current_lots = lots_in_order();
    
    if(current_lots>0)
-      if(sig <= 4)  
+      if(sig <= 2)  
          close_positions();
    if(current_lots<0)
-      if(sig >= -4)  
+      if(sig >= -2)  
          close_positions();
 }
 
@@ -88,8 +94,8 @@ void OnTick()
    //just wait for new bar
    static datetime Time0=0;
 
-   if (Time0 == Time[0])
-      return;
+//!! only uncomment for tester in open p mode   if (Time0 == Time[0])
+//      return;
    Time0 = Time[0];
    
    if(lots_in_order()==0)
