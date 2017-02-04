@@ -16,8 +16,10 @@ input bool use_ADX_confirm = True;
 input int ADX_period = 20;
 input int ADX_level = 22;
 input bool use_RSI_enter = True;
+input bool use_RSI_exit_30 = True;
+input bool use_RSI_exit_double_drop = True;
 input int RSI_len = 14;
-input int RSI_enter_level = 60;
+input int RSI_enter_level = 50;
 
 ///////////////////////////////debug
 //in order to debug, retrieve functions from EA5
@@ -58,10 +60,10 @@ void check_opening()
 
 void check_closing()
 {
-   double sig;
-   sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
+   double trend, RSI0, RSI1, RSI2;
+   trend = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
-   Comment("closing, sig= ",sig);
+//   Comment("closing, sig= ",sig);
 //   Comment("ADX,D+,D_ : = ",iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MAIN, 0)
 //   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_PLUSDI, 0)
 //   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MINUSDI, 0));
@@ -69,12 +71,38 @@ void check_closing()
 
    double current_lots = lots_in_order();
    
-   if(current_lots>0)
-      if(sig <= 2)  
+   if(current_lots>0)   //already bought
+      if(trend <= 2)  
          close_positions();
-   if(current_lots<0)
-      if(sig >= -2)  
+   if(current_lots<0)   //already sold
+      if(trend >= -2)  
          close_positions();
+         
+   if(use_RSI_exit_30)
+   {
+      RSI0 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 1);
+      RSI1 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 2);
+      RSI2 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 3);
+      if(current_lots>0)   //already bought
+         if( (RSI0<RSI1) && (RSI1<RSI2))  
+            close_positions();
+      if(current_lots<0)   //already sold
+         if( (RSI0>RSI1) && (RSI1>RSI2))  
+            close_positions();
+   }
+   
+   if(use_RSI_exit_double_drop)
+   {
+      RSI0 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 1);
+      RSI1 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 2);
+      RSI2 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 3);
+      if(current_lots>0)   //already bought
+         if( (RSI1 > 70) && (RSI0<=70))  
+            close_positions();
+      if(current_lots<0)   //already sold
+         if( (RSI1 < 30) && (RSI0>=30))  
+            close_positions();
+   }
 }
 
 void    close_positions()
