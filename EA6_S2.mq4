@@ -16,7 +16,8 @@ input bool use_ADX_confirm = True;
 input int ADX_period = 20;
 input int ADX_level = 22;
 input bool use_RSI_enter = True;
-input int RSI_len = 10;
+input int RSI_len = 14;
+input int RSI_enter_level = 60;
 
 ///////////////////////////////debug
 //in order to debug, retrieve functions from EA5
@@ -25,17 +26,34 @@ input int RSI_len = 10;
 //------------------------------------------------functions
 void check_opening()
 {
-   double sig;
-   sig = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
+   double trend,RSI0,RSI1,RSI2;
+   trend = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 0);
-   Comment("opening, sig= ",sig);
+//   Comment("opening, sig= ",sig);
 //   Comment("ADX,D+,D_ : = ",iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MAIN, 0)
 //   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_PLUSDI, 0)
 //   ,iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MINUSDI, 0));
-   if(sig >= 6)  
-      OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
-   if(sig <= -6)  
-      OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
+   if( ! use_RSI_enter)
+   {
+      if(trend >= 6)  
+         OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
+      if(trend <= -6)  
+         OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
+   }
+   else
+   {
+      RSI0 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 1);
+      RSI1 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 2);
+      RSI2 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 3);
+      if(trend >= 3) //up trend
+         if(RSI1<RSI_enter_level)
+            if(RSI0>RSI1)
+               OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
+      if(trend <= -3) //down trend
+         if(RSI1> 100-RSI_enter_level)
+            if(RSI0<RSI1)
+               OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
+   }
 }
 
 void check_closing()
