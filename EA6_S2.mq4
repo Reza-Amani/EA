@@ -27,7 +27,6 @@ input int Thr_trend4 = 60;
 input int Thr_trend3 = 65;
 input int Thr_trend2 = 70;
 input int Thr_trend1 = 75;
-input int Thr_trend0 = 105;
 
 ///////////////////////////////debug
 //in order to debug, retrieve functions from EA5
@@ -39,7 +38,7 @@ void check_opening()
    double trend,RSI0,RSI1,RSI2;
    int RSI_thresh0,RSI_thresh1;
    trend = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
-      ADX_period,ADX_level, 0, 0);
+      ADX_period,ADX_level, 0, 1);
 
 //   Comment("opening, sig= ",sig);
 //   Comment("ADX,D+,D_ : = ",iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MAIN, 0)
@@ -58,17 +57,19 @@ void check_opening()
       RSI1 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 2);
       RSI2 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 3);
       RSI_thresh0 = iCustom(Symbol(), Period(),"my_ind/S2/S2_RSI14thresh", MACD_fast_len,use_ADX_confirm,
-         ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1,Thr_trend0, 0, 1);
+         ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1, 0, 1);
       RSI_thresh1 = iCustom(Symbol(), Period(),"my_ind/S2/S2_RSI14thresh", MACD_fast_len,use_ADX_confirm,
-         ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1,Thr_trend0, 0, 2);
+         ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1, 0, 2);
       if(trend > 0) //up trend
          if(RSI1<RSI_thresh1)
             if(RSI0>RSI_thresh0)
-               OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
+               if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
+                  OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
       if(trend < 0) //down trend
          if(RSI1>RSI_thresh1)
             if(RSI0<RSI_thresh0)
-               OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
+               if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
+                  OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
    }
 }
 
