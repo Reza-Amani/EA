@@ -28,6 +28,8 @@ input int Thr_trend3 = 65;
 input int Thr_trend2 = 70;
 input int Thr_trend1 = 75;
 
+input bool use_sltp_4lvl = True;
+
 ///////////////////////////////debug
 //in order to debug, retrieve functions from EA5
 ///////////////////////////////////////////////////////////
@@ -36,9 +38,22 @@ input int Thr_trend1 = 75;
 void check_opening()
 {
    double trend,RSI0,RSI1,RSI2;
+   double ceiling_high,ceiling_med,floor_med,floor_low;
    int RSI_thresh0,RSI_thresh1;
    trend = iCustom(Symbol(), Period(),"my_ind/S2/S2trend", MACD_fast_len,use_ADX_confirm,
       ADX_period,ADX_level, 0, 1);
+   if(use_sltp_4lvl)
+   {
+      ceiling_high = iCustom(Symbol(), Period(),"my_ind/floorceiling", 2, 0);
+      Comment("ceiling= ",ceiling_high);
+      ceiling_med = High[1];//iCustom(Symbol(), Period(),"my_ind/floorceiling", 1, 1);
+      floor_med = Low[1];//iCustom(Symbol(), Period(),"my_ind/floorceiling", 2, 1);
+      floor_low = Low[1];//iCustom(Symbol(), Period(),"my_ind/floorceiling", 3, 1);
+   }
+   else
+   {
+      ceiling_high=1000;ceiling_med=1000;floor_med=0;floor_low=0;
+   }
 
 //   Comment("opening, sig= ",sig);
 //   Comment("ADX,D+,D_ : = ",iADX(Symbol(), Period(), ADX_period, PRICE_OPEN, MODE_MAIN, 0)
@@ -47,9 +62,9 @@ void check_opening()
    if( ! use_RSI_enter)
    {
       if(trend >= 6)  
-         OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
+         OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, floor_low, ceiling_high);//,"normal buy",4321,0, clrGreenYellow);
       if(trend <= -6)  
-         OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
+         OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
    }
    else
    {
@@ -64,12 +79,12 @@ void check_opening()
          if(RSI1<RSI_thresh1)
             if(RSI0>RSI_thresh0)
                if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
-                  OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, 0, 1000);//,"normal buy",4321,0, clrGreenYellow);
+                  OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, floor_low, ceiling_high);//,"normal buy",4321,0, clrGreenYellow);
       if(trend < 0) //down trend
          if(RSI1>RSI_thresh1)
             if(RSI0<RSI_thresh0)
                if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
-                  OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, 1000, 0);//,"normal sell",1234,0, clrGreenYellow);
+                  OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
    }
 }
 
