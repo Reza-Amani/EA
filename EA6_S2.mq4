@@ -44,11 +44,11 @@ void check_opening()
       ADX_period,ADX_level, 0, 1);
    if(use_sltp_4lvl)
    {
-      ceiling_high = iCustom(Symbol(), Period(),"my_ind/floorceiling", 2, 0);
+      ceiling_high = iCustom(Symbol(), Period(),"my_ind/floorceiling", 0, 0);
       Comment("ceiling= ",ceiling_high);
-      ceiling_med = High[1];//iCustom(Symbol(), Period(),"my_ind/floorceiling", 1, 1);
-      floor_med = Low[1];//iCustom(Symbol(), Period(),"my_ind/floorceiling", 2, 1);
-      floor_low = Low[1];//iCustom(Symbol(), Period(),"my_ind/floorceiling", 3, 1);
+      ceiling_med = iCustom(Symbol(), Period(),"my_ind/floorceiling", 1, 0);
+      floor_med = iCustom(Symbol(), Period(),"my_ind/floorceiling", 2, 0);
+      floor_low = iCustom(Symbol(), Period(),"my_ind/floorceiling", 3, 0);
    }
    else
    {
