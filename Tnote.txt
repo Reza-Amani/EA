@@ -1,2 +1,6 @@
+in first bar double the tp. then ceiling-high
+in next bars, use floor-med
+use stop trailing
+
 peaks in RSI!
 tf/sl
