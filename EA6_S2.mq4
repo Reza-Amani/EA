@@ -29,6 +29,7 @@ input int Thr_trend2 = 70;
 input int Thr_trend1 = 75;
 
 input bool use_sltp_4lvl = True;
+input bool manage_sltp_4lvl = True;
 
 ///////////////////////////////debug
 //in order to debug, retrieve functions from EA5
@@ -86,6 +87,39 @@ void check_opening()
                if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
                   OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
    }
+}
+
+void manage_sltp()
+{
+   double ceiling_high,ceiling_med,floor_med,floor_low,new_tp,new_sl;
+   if(manage_sltp_4lvl)
+   {
+      ceiling_high = iCustom(Symbol(), Period(),"my_ind/floorceiling", 0, 0);
+      ceiling_med = iCustom(Symbol(), Period(),"my_ind/floorceiling", 1, 0);
+      floor_med = iCustom(Symbol(), Period(),"my_ind/floorceiling", 2, 0);
+      floor_low = iCustom(Symbol(), Period(),"my_ind/floorceiling", 3, 0);
+   }
+   if(OrderSelect(0,SELECT_BY_POS)==false)   //assuming that maximum 1 order may exist
+      return;
+   if(OrderType()==OP_BUY)
+   {  //buy trade
+      new_tp = ceiling_high;
+      if(OrderStopLoss() > floor_med)
+         new_sl = OrderStopLoss();
+      else
+         new_sl = floor_med;
+      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
+   }
+   else
+   {  //sell trade
+      new_tp = floor_low;
+      if(OrderStopLoss() < ceiling_med)
+         new_sl = OrderStopLoss();
+      else
+         new_sl = ceiling_med;
+      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
+   }
+   
 }
 
 void check_closing()
@@ -177,7 +211,10 @@ void OnTick()
    if(lots_in_order()==0)
       check_opening();
    else
+   {
+      manage_sltp();
       check_closing();
+   }
   }
 //------------------------------------------default functions
 int OnInit()
