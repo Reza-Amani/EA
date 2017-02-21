@@ -1,6 +1,6 @@
-in first bar double the tp. then ceiling-high
-in next bars, use floor-med
-use stop trailing
+sltp and trailing turned loss to profit in one period and reduce profit in another!
+more investigation needed 
 
-peaks in RSI!
-tf/sl
+in first bar double the tp. 
+
+order of peaks in RSI!
