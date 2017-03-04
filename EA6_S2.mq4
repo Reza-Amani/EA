@@ -77,12 +77,12 @@ void check_opening()
       RSI_thresh1 = iCustom(Symbol(), Period(),"my_ind/S2/S2_RSI14thresh", MACD_fast_len,use_ADX_confirm,
          ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1, 0, 2);
       if(trend > 0) //up trend
-         if(RSI1<RSI_thresh1)
+         if(RSI1<RSI_thresh0)
             if(RSI0>RSI_thresh0)
                if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
                   OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, floor_low, ceiling_high);//,"normal buy",4321,0, clrGreenYellow);
       if(trend < 0) //down trend
-         if(RSI1>RSI_thresh1)
+         if(RSI1>RSI_thresh0)
             if(RSI0<RSI_thresh0)
                if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
                   OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
