@@ -19,12 +19,12 @@ input double i_Lots         =1;
 #define _MAX_ALPHA 2.5
 #define _max_len  25
 //----globals
-//double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
-//int sister_bar_no[100];
+double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
 string logstr="";
 int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
+int no_of_trades=0;
 
 double patternS[_max_len];
 
@@ -50,7 +50,7 @@ int OnInit()
 void check_opening()
 {
    int history_size=min(Bars,history)-pattern_len-10; 
-   int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_h2_higher;
+   int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_h2_higher,no_of_l2_lower;
    double corrH,corrL,corrS;
 //   double aH,aL;
    for(int i=1;i<pattern_len;i++)
@@ -60,6 +60,7 @@ void check_opening()
    no_of_b1_higher=0;
    no_of_b2_higher=0;
    no_of_h2_higher=0;
+   no_of_l2_lower=0;
    
    for(int i=pattern_len;i<history_size;i++)
      {
@@ -69,36 +70,36 @@ void check_opening()
       if( (corrH>correlation_thresh) &&
           (corrL>correlation_thresh) &&
           (corrS>correlation_thresh) )
-        {
-               //saving alpha's for next 2 bars
-/*               aH=alpha(High[i], Low[i], High[i-1]);
-               aL=alpha(High[i], Low[i], Low[i-1]);
-               aH=min(aH,_MAX_ALPHA);
-               aL=max(aL,-_MAX_ALPHA);
-               alpha_H1[number_of_hits] = aH;
-               alpha_L1[number_of_hits] = aL;
-               aH=alpha(High[i], Low[i], High[i-2]);
-               aL=alpha(High[i], Low[i], Low[i-2]);
-               aH=min(aH,_MAX_ALPHA);
-               aL=max(aL,-_MAX_ALPHA);
-               alpha_H2[number_of_hits] = aH;
-               alpha_L2[number_of_hits] = aL;
-               sister_bar_no[number_of_hits]=i;
-*/   
+        {   //analysing found sister
+            alpha_H1[number_of_hits] = alpha(High[i], Low[i], High[i-1]);
+            alpha_L1[number_of_hits] = alpha(High[i], Low[i], Low[i-1]);
+            alpha_H2[number_of_hits] = alpha(High[i], Low[i], High[i-2]);
+            alpha_L2[number_of_hits] = alpha(High[i], Low[i], Low[i-2]);
+   
             if((High[i-1]+Low[i-1])/2>(High[i]+Low[i])/2)
                no_of_b1_higher++;
             if((High[i-2]+Low[i-2])/2>(High[i]+Low[i])/2)
                no_of_b2_higher++;
             if(High[i-2]>High[i])
                no_of_h2_higher++;
+            if(Low[i-2]<Low[i])
+               no_of_l2_lower++;
             number_of_hits++;
             if(number_of_hits>=100)
                break;
          }
-         if(number_of_hits>_min_hit)
-            FileWrite(filehandle,number_of_hits,"b1 higher",(int)100*no_of_b1_higher/number_of_hits,"b2 higher",(int)100*no_of_b2_higher/number_of_hits,"H2 higher",(int)(100*no_of_h2_higher/number_of_hits));
-         show_log_plus(" Hits=",number_of_hits,"b1 higher",(int)100*no_of_b1_higher/number_of_hits,"b2 higher",(int)100*no_of_b2_higher/number_of_hits,"H2 higher",(int)(100*no_of_h2_higher/number_of_hits));
       }  //end of search for sisters
+      if(number_of_hits>_min_hit)
+      {
+         double ave_alphaH1 = array_ave(alpha_H1,number_of_hits);
+         double ave_alphaL1 = array_ave(alpha_L1,number_of_hits);
+         double ave_alphaH2 = array_ave(alpha_H2,number_of_hits);
+         double ave_alphaL2 = array_ave(alpha_L2,number_of_hits);
+         no_of_output_lines++;
+
+         FileWrite(filehandle,number_of_hits,"b1 higher",(int)100*no_of_b1_higher/number_of_hits,"b2 higher",(int)100*no_of_b2_higher/number_of_hits,"H2 higher",(int)100*no_of_h2_higher/number_of_hits,"L2 lower",(int)100*no_of_l2_lower/number_of_hits,"aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2);
+         show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",(int)100*no_of_b1_higher/number_of_hits,"  b2 higher=",(int)100*no_of_b2_higher/number_of_hits,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
+      }
       
             
 }
@@ -269,7 +270,7 @@ void reset_log()
   {
    logstr="";
   }
-/////////////////////////////////////////////////////////////correlation functions
+/////////////////////////////////////////////////////////////correlation and alpha functions
 /////////////////////////////////////////////////////////////////////////
 double correlation_bar_size_array(const double &array1[],int pattern2,int _len)
   {  //pattern2 is the end indexe
@@ -336,6 +337,46 @@ double correlation_array(const double &array1[],int offset1,const double &array2
    return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
 
   }
+//+------------------------------------------------------------------+
+double array_ave(double &array[],int size)
+  {
+   double result=0;
+   if(size==0)
+      return 0;
+   for(int i=0; i<size; i++)
+      result+=array[i];
+   return result/size;
+  }
+//+------------------------------------------------------------------+
+double price_fromalpha(double refH,double refL,double alpha)
+  {
+   return (refL+refH)/2 + alpha * (refH-refL);
+  }
+//+------------------------------------------------------------------+
+double alpha(double refH,double refL,double in)
+  {
+   double result;
+   if(refH==refL)
+     {
+      if(in==refL)
+         return 0;
+      if(in>refL)
+         return _MAX_ALPHA;
+      else
+         return -_MAX_ALPHA;
+     }
+   else
+     {
+      result=(in-(refL+refH)/2)/(refH-refL);
+      if(result>_MAX_ALPHA)
+         result=_MAX_ALPHA;
+      if(result<-_MAX_ALPHA)
+         result=-_MAX_ALPHA;
+      return result;
+     }
+
+  }
+
 ///////////////////////////////////////////////////////////////tools
 ///////////////////////////////////////////////////////////////
 double max(double v1,double v2=-DBL_MAX,double v3=-DBL_MAX,double v4=-DBL_MAX,double v5=-DBL_MAX,double v6=-DBL_MAX)
