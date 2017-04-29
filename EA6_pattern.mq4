@@ -9,12 +9,13 @@
 #property version   "1.00"
 #property strict
 ///////////////////////////////inputs
-input double i_Lots         =1;
 input int      pattern_len=5;
 input double   correlation_thresh=93;
+input int      history=20000;
+input double i_Lots         =1;
 //////////////////////////////parameters
 //----macros
-#define _min_hit 5
+#define _min_hit 20
 #define _MAX_ALPHA 2.5
 #define _max_len  25
 //----globals
@@ -25,8 +26,6 @@ int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
 
-double patternH[_max_len];
-double patternL[_max_len];
 double patternS[_max_len];
 
 int filehandle=FileOpen("./tradefiles/EAlog.csv",FILE_WRITE|FILE_CSV,',');
@@ -50,42 +49,29 @@ int OnInit()
 //------------------------------------------------functions
 void check_opening()
 {
-    FileWrite(filehandle,Open[0],High[0],High[1],High[2]);
-
-//---
-/*
-   int history_size=min(Bars,history_start)-100; 
-   int number_of_hits,no_of_b1_higher,no_of_b2_higher;
+   int history_size=min(Bars,history)-pattern_len-10; 
+   int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_h2_higher;
    double corrH,corrL,corrS;
-   double aH,aL;
-   double temp_reading;
-   while(!FileIsEnding(in_filehandle)) 
-   {
-      temp_reading=FileReadNumber(in_filehandle); //returns zero for non-numbers
-      if(temp_reading==11111)
-      {
-         for(int i=0;i<pattern_len;i++)
-            patternH[i]=FileReadNumber(in_filehandle);
-         for(int i=0;i<pattern_len;i++)
-            patternL[i]=FileReadNumber(in_filehandle);
-         for(int i=0;i<pattern_len;i++)
-            patternS[i]=patternH[i]-patternL[i];
+//   double aH,aL;
+   for(int i=1;i<pattern_len;i++)
+      patternS[i-1]=High[i]-Low[i];
             
-            
-         number_of_hits = 0;
-         no_of_b1_higher=0;
-         no_of_b2_higher=0;
-         for(int i=history_end;i<history_size;i++)
-           {
-            corrH = correlation_array(patternH,0,High,i,pattern_len);
-            corrL = correlation_array(patternL,0,Low,i,pattern_len);
-            corrS = correlation_bar_size_array(patternS,i,pattern_len);
-            if( (corrH>correlation_thresh) &&
-                (corrL>correlation_thresh) &&
-                (corrS>correlation_thresh) )
-              {
+   number_of_hits = 0;
+   no_of_b1_higher=0;
+   no_of_b2_higher=0;
+   no_of_h2_higher=0;
+   
+   for(int i=pattern_len;i<history_size;i++)
+     {
+      corrH = correlation_array(High,1,High,i,pattern_len);
+      corrL = correlation_array(Low,1,Low,i,pattern_len);
+      corrS = correlation_bar_size_array(patternS,i,pattern_len);
+      if( (corrH>correlation_thresh) &&
+          (corrL>correlation_thresh) &&
+          (corrS>correlation_thresh) )
+        {
                //saving alpha's for next 2 bars
-               aH=alpha(High[i], Low[i], High[i-1]);
+/*               aH=alpha(High[i], Low[i], High[i-1]);
                aL=alpha(High[i], Low[i], Low[i-1]);
                aH=min(aH,_MAX_ALPHA);
                aL=max(aL,-_MAX_ALPHA);
@@ -98,25 +84,24 @@ void check_opening()
                alpha_H2[number_of_hits] = aH;
                alpha_L2[number_of_hits] = aL;
                sister_bar_no[number_of_hits]=i;
-   
-               if((High[i-1]+Low[i-1])/2>(High[i]+Low[i])/2)
-                  no_of_b1_higher++;
-               if((High[i-2]+Low[i-2])/2>(High[i]+Low[i])/2)
-                  no_of_b2_higher++;
-   
-               number_of_hits++;
-               if(number_of_hits>=100)
-                  break;
-              }
-           }  //end of search for sisters
-           FileWrite(out_filehandle,patternH[0],number_of_hits,no_of_b1_higher,no_of_b2_higher,(int)(100*no_of_b1_higher/max(number_of_hits,1)));
-           
-           show_log_plus("Hinput=",patternH[0]," Hits=",number_of_hits," %%b1higher=",100*no_of_b1_higher/max(number_of_hits,1)," %%b2higher=",100*no_of_b2_higher/max(number_of_hits,1));
-            
+*/   
+            if((High[i-1]+Low[i-1])/2>(High[i]+Low[i])/2)
+               no_of_b1_higher++;
+            if((High[i-2]+Low[i-2])/2>(High[i]+Low[i])/2)
+               no_of_b2_higher++;
+            if(High[i-2]>High[i])
+               no_of_h2_higher++;
+            number_of_hits++;
+            if(number_of_hits>=100)
+               break;
          }
-         
-         
-     }
+         if(number_of_hits>_min_hit)
+            FileWrite(filehandle,number_of_hits,"b1 higher",(int)100*no_of_b1_higher/number_of_hits,"b2 higher",(int)100*no_of_b2_higher/number_of_hits,"H2 higher",(int)(100*no_of_h2_higher/number_of_hits));
+         show_log_plus(" Hits=",number_of_hits,"b1 higher",(int)100*no_of_b1_higher/number_of_hits,"b2 higher",(int)100*no_of_b2_higher/number_of_hits,"H2 higher",(int)(100*no_of_h2_higher/number_of_hits));
+      }  //end of search for sisters
+      
+            
+}
 
 
 
@@ -132,7 +117,7 @@ void check_opening()
 
 
 
-
+/*
    double trend,RSI0,RSI1,RSI2;
    double ceiling_high,ceiling_med,floor_med,floor_low;
    int RSI_thresh0,RSI_thresh1;
@@ -166,7 +151,6 @@ void check_opening()
                   OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
    }
    */
-}
 
 void manage_sltp()
 {
@@ -285,4 +269,93 @@ void reset_log()
   {
    logstr="";
   }
+/////////////////////////////////////////////////////////////correlation functions
 /////////////////////////////////////////////////////////////////////////
+double correlation_bar_size_array(const double &array1[],int pattern2,int _len)
+  {  //pattern2 is the end indexe
+//sigma(x-avgx)(y-avgy)/sqrt(sigma(x-avgx)2*sigma(y-avgy)2)
+   double x,y;
+   double avg1=0,avg2=0;
+   int i;
+   for(i=0; i<_len; i++)
+     {
+      x = array1[i];
+      y = High[i+pattern2]-Low[i+pattern2];
+      avg1 += x;
+      avg2 += y;
+     }
+   avg1 /= _len;
+   avg2 /= _len;
+
+   double x_xby_yb=0,x_xb2=0,y_yb2=0;
+   for(i=0; i<_len; i++)
+     {
+      x = array1[i];
+      y = High[i+pattern2]-Low[i+pattern2];
+      x_xby_yb+=(x-avg1)*(y-avg2);
+      x_xb2 += (x-avg1)*(x-avg1);
+      y_yb2 += (y-avg2)*(y-avg2);
+     }
+
+   if(x_xb2*y_yb2==0)
+      return 0;
+
+   return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
+
+  }
+//+---------------------------------------
+double correlation_array(const double &array1[],int offset1,const double &array2[],int offset2,int _len)
+  {
+//sigma(x-avgx)(y-avgy)/sqrt(sigma(x-avgx)2*sigma(y-avgy)2)
+   double x,y;
+   double avg1=0,avg2=0;
+   int i;
+   for(i=0; i<_len; i++)
+     {
+      x = array1[i+offset1];
+      y = array2[i+offset2];
+      avg1 += x;
+      avg2 += y;
+     }
+   avg1 /= _len;
+   avg2 /= _len;
+
+   double x_xby_yb=0,x_xb2=0,y_yb2=0;
+   for(i=0; i<_len; i++)
+     {
+      x = array1[i+offset1];
+      y = array2[i+offset2];
+      x_xby_yb+=(x-avg1)*(y-avg2);
+      x_xb2 += (x-avg1)*(x-avg1);
+      y_yb2 += (y-avg2)*(y-avg2);
+     }
+
+   if(x_xb2*y_yb2==0)
+      return 0;
+
+   return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
+
+  }
+///////////////////////////////////////////////////////////////tools
+///////////////////////////////////////////////////////////////
+double max(double v1,double v2=-DBL_MAX,double v3=-DBL_MAX,double v4=-DBL_MAX,double v5=-DBL_MAX,double v6=-DBL_MAX)
+  {
+   double result=v1;
+   if(v2>result)  result=v2;
+   if(v3>result)  result=v3;
+   if(v4>result)  result=v4;
+   if(v5>result)  result=v5;
+   if(v6>result)  result=v6;
+   return result;
+  }
+//+-------------------------------------------------
+double min(double v1,double v2=DBL_MAX,double v3=DBL_MAX,double v4=DBL_MAX,double v5=DBL_MAX,double v6=DBL_MAX)
+  {
+   double result=v1;
+   if(v2<result)  result=v2;
+   if(v3<result)  result=v3;
+   if(v4<result)  result=v4;
+   if(v5<result)  result=v5;
+   if(v6<result)  result=v6;
+   return result;
+  }
