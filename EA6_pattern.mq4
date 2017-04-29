@@ -91,14 +91,16 @@ void check_opening()
       }  //end of search for sisters
       if(number_of_hits>_min_hit)
       {
+         no_of_output_lines++;
          double ave_alphaH1 = array_ave(alpha_H1,number_of_hits);
          double ave_alphaL1 = array_ave(alpha_L1,number_of_hits);
          double ave_alphaH2 = array_ave(alpha_H2,number_of_hits);
          double ave_alphaL2 = array_ave(alpha_L2,number_of_hits);
-         no_of_output_lines++;
+         int b1_higher_pc=(int)100*no_of_b1_higher/number_of_hits;
+         int b2_higher_pc=(int)100*no_of_b2_higher/number_of_hits;
 
-         FileWrite(filehandle,number_of_hits,"b1 higher",(int)100*no_of_b1_higher/number_of_hits,"b2 higher",(int)100*no_of_b2_higher/number_of_hits,"H2 higher",(int)100*no_of_h2_higher/number_of_hits,"L2 lower",(int)100*no_of_l2_lower/number_of_hits,"aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2);
-         show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",(int)100*no_of_b1_higher/number_of_hits,"  b2 higher=",(int)100*no_of_b2_higher/number_of_hits,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
+         FileWrite(filehandle,number_of_hits,"b1 higher",b1_higher_pc,"b2 higher",b2_higher_pc,"H2 higher",(int)100*no_of_h2_higher/number_of_hits,"L2 lower",(int)100*no_of_l2_lower/number_of_hits,"aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2);
+         show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
       }
       
             
