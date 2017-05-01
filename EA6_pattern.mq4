@@ -26,6 +26,7 @@ int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
 int no_of_trades=0;
 int state=0;
+int ticket_is_buy;
 int history_size; 
 int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_l1_lower,no_of_h1_higher,no_of_l2_lower,no_of_h2_higher;
 double ave_alphaH1,ave_alphaL1,ave_alphaH2,ave_alphaL2;
@@ -85,6 +86,10 @@ void open_ticket()
                no_of_b1_higher++;
             if((High[i-2]+Low[i-2])/2>(High[i]+Low[i])/2)
                no_of_b2_higher++;
+            if(High[i-1]>High[i])
+               no_of_h1_higher++;
+            if(Low[i-1]<Low[i])
+               no_of_l1_lower++;
             if(High[i-2]>High[i])
                no_of_h2_higher++;
             if(Low[i-2]<Low[i])
@@ -111,12 +116,14 @@ void open_ticket()
          if(b2_higher_pc>66)
          {
             OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
+            ticket_is_buy=1;
             state = 1;
          }
          else
          if(b2_higher_pc<33)
          {
             OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
+            ticket_is_buy=-1;
             state = 1;
          }
          else
@@ -209,9 +216,19 @@ void control_ticket()
 void close_ticket()
 {
    state=0;
+   int b2higher = 0;
+   if(High[1]>High[3])
+      b2higher++;
+   else
+      b2higher--;
+   if(Low[1]>Low[3])
+      b2higher++;
+   else
+      b2higher--;
+   b2higher*=ticket_is_buy;
    FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
       "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
-      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"trade",1);
+      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"trade",1,b2higher);
    close_positions();
 }
 
