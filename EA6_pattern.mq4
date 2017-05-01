@@ -25,7 +25,11 @@ int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
 int no_of_trades=0;
-
+int state=0;
+int history_size; 
+int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_l1_lower,no_of_h1_higher,no_of_l2_lower,no_of_h2_higher;
+double ave_alphaH1,ave_alphaL1,ave_alphaH2,ave_alphaL2;
+int b1_higher_pc,b2_higher_pc,h1_higher_pc,l1_lower_pc,h2_higher_pc,l2_lower_pc;
 double patternS[_max_len];
 
 int filehandle=FileOpen("./tradefiles/EAlog.csv",FILE_WRITE|FILE_CSV,',');
@@ -47,10 +51,9 @@ int OnInit()
   }
 
 //------------------------------------------------functions
-void check_opening()
+void open_ticket()
 {
-   int history_size=min(Bars,history)-pattern_len-10; 
-   int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_h2_higher,no_of_l2_lower;
+   history_size=min(Bars,history)-pattern_len-10; 
    double corrH,corrL,corrS;
 //   double aH,aL;
    for(int i=1;i<pattern_len;i++)
@@ -59,6 +62,8 @@ void check_opening()
    number_of_hits = 0;
    no_of_b1_higher=0;
    no_of_b2_higher=0;
+   no_of_h1_higher=0;
+   no_of_l1_lower=0;
    no_of_h2_higher=0;
    no_of_l2_lower=0;
    
@@ -92,15 +97,35 @@ void check_opening()
       if(number_of_hits>_min_hit)
       {
          no_of_output_lines++;
-         double ave_alphaH1 = array_ave(alpha_H1,number_of_hits);
-         double ave_alphaL1 = array_ave(alpha_L1,number_of_hits);
-         double ave_alphaH2 = array_ave(alpha_H2,number_of_hits);
-         double ave_alphaL2 = array_ave(alpha_L2,number_of_hits);
-         int b1_higher_pc=(int)100*no_of_b1_higher/number_of_hits;
-         int b2_higher_pc=(int)100*no_of_b2_higher/number_of_hits;
+         ave_alphaH1 = array_ave(alpha_H1,number_of_hits);
+         ave_alphaL1 = array_ave(alpha_L1,number_of_hits);
+         ave_alphaH2 = array_ave(alpha_H2,number_of_hits);
+         ave_alphaL2 = array_ave(alpha_L2,number_of_hits);
+         b1_higher_pc=(int)100*no_of_b1_higher/number_of_hits;
+         b2_higher_pc=(int)100*no_of_b2_higher/number_of_hits;
+         h1_higher_pc=(int)100*no_of_h1_higher/number_of_hits;
+         l1_lower_pc=(int)100*no_of_l1_lower/number_of_hits;
+         h2_higher_pc=(int)100*no_of_h2_higher/number_of_hits;
+         l2_lower_pc=(int)100*no_of_l2_lower/number_of_hits;
 
-         FileWrite(filehandle,number_of_hits,"b1 higher",b1_higher_pc,"b2 higher",b2_higher_pc,"H2 higher",(int)100*no_of_h2_higher/number_of_hits,"L2 lower",(int)100*no_of_l2_lower/number_of_hits,"aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2);
-         show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
+         if(b2_higher_pc>66)
+         {
+            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
+            state = 1;
+         }
+         else
+         if(b2_higher_pc<33)
+         {
+            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
+            state = 1;
+         }
+         else
+         {  //no trade, just log
+            FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
+               "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
+               "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"No trade",0);
+            show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
+         }
       }
       
             
@@ -155,8 +180,9 @@ void check_opening()
    }
    */
 
-void manage_sltp()
+void control_ticket()
 {
+   state = 2;
 /*   if(OrderSelect(0,SELECT_BY_POS)==false)   //assuming that maximum 1 order may exist
       return;
    if(OrderType()==OP_BUY)
@@ -180,9 +206,13 @@ void manage_sltp()
 */   
 }
 
-void check_closing()
+void close_ticket()
 {
-            close_positions();
+   state=0;
+   FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
+      "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
+      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"trade",1);
+   close_positions();
 }
 
 void    close_positions()
@@ -225,13 +255,22 @@ void OnTick()
       return;
    Time0 = Time[0];
    
-   if(lots_in_order()==0)
-      check_opening();
-   else
+   switch(state)
    {
-      manage_sltp();
-      check_closing();
+      case 0:
+         open_ticket();  //still looking
+         break;
+      case 1:
+         control_ticket();   //at the end of first bar, check the probable trade
+         break;
+      case 2:
+         close_ticket();    //close ticket if there is still
+         break;
+         
    }
+///   if(lots_in_order()==0)
+//      manage_sltp();
+//      check_closing();
   }
 //------------------------------------------default functions
 void OnDeinit(const int reason)
