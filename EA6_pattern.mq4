@@ -25,6 +25,7 @@ int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
 int no_of_trades=0;
+int trade_id=0;
 int state=0;
 int ticket_is_buy;
 int history_size; 
@@ -115,14 +116,16 @@ void open_ticket()
 
          if(b2_higher_pc>66)
          {
-            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
+//            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
+            OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, price_fromalpha(High[1],Low[1],0), 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5),NULL,++trade_id,0,clrAliceBlue);
             ticket_is_buy=1;
             state = 1;
          }
          else
          if(b2_higher_pc<33)
          {
-            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
+//            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
+            OrderSend(Symbol(),OP_SELLLIMIT, i_Lots, price_fromalpha(High[1],Low[1],0), 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5),NULL,++trade_id,0,clrDarkRed);
             ticket_is_buy=-1;
             state = 1;
          }
@@ -131,7 +134,7 @@ void open_ticket()
             FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
                "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
                "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"No trade",0);
-            show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
+//            show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
          }
       }
       
@@ -190,27 +193,24 @@ void open_ticket()
 void control_ticket()
 {
    state = 2;
-/*   if(OrderSelect(0,SELECT_BY_POS)==false)   //assuming that maximum 1 order may exist
+   if(OrderSelect(0,SELECT_BY_POS)==false)   //The order should have been executed and later closed
+   {
+      show_log_plus("order completed in one bar");
       return;
-   if(OrderType()==OP_BUY)
-   {  //buy trade
-      new_tp = ceiling_high;
-      if(OrderStopLoss() > floor_med)
-         new_sl = OrderStopLoss();
-      else
-         new_sl = floor_med;
-      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
    }
-   else
-   {  //sell trade
-      new_tp = floor_low;
-      if(OrderStopLoss() < ceiling_med)
-         new_sl = OrderStopLoss();
-      else
-         new_sl = ceiling_med;
-      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
+   switch(OrderType())
+   {
+      case OP_BUYLIMIT:    //unmet limit orders
+      case OP_SELLLIMIT:
+         show_log_plus("unmet limit order");
+         close_positions();
+         break;
+      case OP_BUY:         //executed, not closed order
+      case OP_SELL:
+         show_log_plus("executed order");
+         break;
    }
-*/   
+   //      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
 }
 
 void close_ticket()
