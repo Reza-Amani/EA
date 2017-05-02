@@ -118,12 +118,15 @@ void open_ticket()
          {
 //            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
             double enter_price = ND(price_fromalpha(High[1],Low[1],0));
-            double sl = ND(price_fromalpha(High[1],Low[1],-0.5));
-            double tp = ND(price_fromalpha(High[1],Low[1],+0.5));
-            int result=OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, enter_price, 3, sl, tp,NULL,++trade_id,0,clrAliceBlue);
-//            int result=OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, price_fromalpha(High[1],Low[1],0), 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5),NULL,++trade_id,0,clrAliceBlue);
+            double sl = ND(price_fromalpha(High[1],Low[1],-1));
+            double tp = ND(price_fromalpha(High[1],Low[1],+1));
+            int result;
+            if(enter_price>Ask)  //already good price, trade
+               result=OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 0, sl,tp,NULL,++trade_id,0,clrAliceBlue);
+            else     //put a limit order
+               result=OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, enter_price, 0, sl, tp,NULL,++trade_id,0,clrAliceBlue);
             if(result < 0)
-               Print("OrderSend Error: ", GetLastError());  //for print on screen:  Alert            ticket_is_buy=1;
+               Print("OrderSend Error: ", GetLastError()," ask= ",Ask," enter= ",enter_price," sl= ",sl," tp= ",tp);  //for print on screen:  Alert
             else
             {  
                ticket_is_buy=1;
@@ -135,11 +138,15 @@ void open_ticket()
          {
 //            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
             double enter_price = ND(price_fromalpha(High[1],Low[1],0));
-            double sl = ND(price_fromalpha(High[1],Low[1],+0.5));
-            double tp = ND(price_fromalpha(High[1],Low[1],-0.5));
-            int result=OrderSend(Symbol(),OP_SELLLIMIT, i_Lots, enter_price, 3, sl, tp,NULL,++trade_id,0,clrDarkRed);
+            double sl = ND(price_fromalpha(High[1],Low[1],+1));
+            double tp = ND(price_fromalpha(High[1],Low[1],-1));
+            int result;
+            if(enter_price<Bid)  //already good price, trade
+               result=OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 0, sl,tp,NULL,++trade_id,0,clrDarkRed);
+            else     //put a limit order
+               result=OrderSend(Symbol(),OP_SELLLIMIT, i_Lots, enter_price, 0, sl, tp,NULL,++trade_id,0,clrDarkRed);
             if(result < 0)
-               Print("OrderSend Error: ", GetLastError(),Ask,enter_price,sl,tp);  //for print on screen:  Alert            ticket_is_buy=1;
+               Print("OrderSend Error: ", GetLastError()," bid= ",Bid," enter= ",enter_price," sl= ",sl," tp= ",tp);  //for print on screen:  Alert
             else
             {  
                ticket_is_buy=-1;
