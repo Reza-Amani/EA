@@ -117,17 +117,34 @@ void open_ticket()
          if(b2_higher_pc>66)
          {
 //            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
-            OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, price_fromalpha(High[1],Low[1],0), 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5),NULL,++trade_id,0,clrAliceBlue);
-            ticket_is_buy=1;
-            state = 1;
+            double enter_price = ND(price_fromalpha(High[1],Low[1],0));
+            double sl = ND(price_fromalpha(High[1],Low[1],-0.5));
+            double tp = ND(price_fromalpha(High[1],Low[1],+0.5));
+            int result=OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, enter_price, 3, sl, tp,NULL,++trade_id,0,clrAliceBlue);
+//            int result=OrderSend(Symbol(),OP_BUYLIMIT, i_Lots, price_fromalpha(High[1],Low[1],0), 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5),NULL,++trade_id,0,clrAliceBlue);
+            if(result < 0)
+               Print("OrderSend Error: ", GetLastError());  //for print on screen:  Alert            ticket_is_buy=1;
+            else
+            {  
+               ticket_is_buy=1;
+               state = 1;
+            }
          }
          else
          if(b2_higher_pc<33)
          {
 //            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
-            OrderSend(Symbol(),OP_SELLLIMIT, i_Lots, price_fromalpha(High[1],Low[1],0), 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5),NULL,++trade_id,0,clrDarkRed);
-            ticket_is_buy=-1;
-            state = 1;
+            double enter_price = ND(price_fromalpha(High[1],Low[1],0));
+            double sl = ND(price_fromalpha(High[1],Low[1],+0.5));
+            double tp = ND(price_fromalpha(High[1],Low[1],-0.5));
+            int result=OrderSend(Symbol(),OP_SELLLIMIT, i_Lots, enter_price, 3, sl, tp,NULL,++trade_id,0,clrDarkRed);
+            if(result < 0)
+               Print("OrderSend Error: ", GetLastError(),Ask,enter_price,sl,tp);  //for print on screen:  Alert            ticket_is_buy=1;
+            else
+            {  
+               ticket_is_buy=-1;
+               state = 1;
+            }
          }
          else
          {  //no trade, just log
@@ -458,3 +475,8 @@ double min(double v1,double v2=DBL_MAX,double v3=DBL_MAX,double v4=DBL_MAX,doubl
    if(v6<result)  result=v6;
    return result;
   }
+//+-------------------------------------------------
+double ND(double val)
+{
+   return(NormalizeDouble(val, Digits));
+}
