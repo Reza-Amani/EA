@@ -265,6 +265,8 @@ void    close_positions()
          OrderClose(OrderTicket(),OrderLots(),Bid,3);
       else if(OrderType()==OP_SELL)
          OrderClose(OrderTicket(),OrderLots(),Ask,3);
+      else
+         OrderDelete(OrderTicket(),clrGray);
    }
 }
 double lots_in_order()
