@@ -33,6 +33,7 @@ int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_l1_lower,no_of_h1_highe
 double ave_alphaH1,ave_alphaL1,ave_alphaH2,ave_alphaL2;
 int b1_higher_pc,b2_higher_pc,h1_higher_pc,l1_lower_pc,h2_higher_pc,l2_lower_pc;
 double patternS[_max_len];
+int what_happend;
 
 int filehandle=FileOpen("./tradefiles/EAlog.csv",FILE_WRITE|FILE_CSV,',');
 ///////////////////////////////debug
@@ -53,7 +54,7 @@ int OnInit()
   }
 
 //------------------------------------------------functions
-void open_ticket()
+void bar1_search()
 {
    history_size=min(Bars,history)-pattern_len-10; 
    double corrH,corrL,corrS;
@@ -155,9 +156,9 @@ void open_ticket()
          }
          else
          {  //no trade, just log
-            FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
-               "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
-               "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"No trade",0);
+//            FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
+//               "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
+//               "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"No trade",0);
 //            show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
          }
       }
@@ -165,61 +166,13 @@ void open_ticket()
             
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-   double trend,RSI0,RSI1,RSI2;
-   double ceiling_high,ceiling_med,floor_med,floor_low;
-   int RSI_thresh0,RSI_thresh1;
-
-
-   if( ! use_RSI_enter)
-   {
-      if(trend >= 6)  
-         OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, floor_low, ceiling_high);//,"normal buy",4321,0, clrGreenYellow);
-      if(trend <= -6)  
-         OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
-   }
-   else
-   {
-      RSI0 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 1);
-      RSI1 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 2);
-      RSI2 = iCustom(Symbol(), Period(),"Market/Fast and smooth RSI", RSI_len, MODE_LWMA, PRICE_CLOSE, 0, 3);
-      RSI_thresh0 = iCustom(Symbol(), Period(),"my_ind/S2/S2_RSI14thresh", MACD_fast_len,use_ADX_confirm,
-         ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1, 0, 1);
-      RSI_thresh1 = iCustom(Symbol(), Period(),"my_ind/S2/S2_RSI14thresh", MACD_fast_len,use_ADX_confirm,
-         ADX_period,ADX_level,Thr_trend6,Thr_trend5,Thr_trend4,Thr_trend3,Thr_trend2,Thr_trend1, 0, 2);
-      if(trend > 0) //up trend
-         if(RSI1<RSI_thresh0)
-            if(RSI0>RSI_thresh0)
-               if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
-                  OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, floor_low, ceiling_high);//,"normal buy",4321,0, clrGreenYellow);
-      if(trend < 0) //down trend
-         if(RSI1>RSI_thresh0)
-            if(RSI0<RSI_thresh0)
-               if(RSI_thresh1!=EMPTY_VALUE)   //excluding the first bar after zero trend
-                  OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, ceiling_high, floor_low);//,"normal sell",1234,0, clrGreenYellow);
-   }
-   */
-
-void control_ticket()
+void bar2_control_ticket()
 {
    state = 2;
    if(OrderSelect(0,SELECT_BY_POS)==false)   //The order should have been executed and later closed
    {
       show_log_plus("order completed in one bar");
+      what_happend=2;
       return;
    }
    switch(OrderType())
@@ -228,6 +181,7 @@ void control_ticket()
       case OP_SELLLIMIT:
          show_log_plus("unmet limit order");
          close_positions();
+         what_happend=3;
          break;
       case OP_BUY:         //executed, not closed order
       case OP_SELL:
@@ -237,8 +191,17 @@ void control_ticket()
    //      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
 }
 
-void close_ticket()
+void bar3_close_ticket()
 {
+   if(OrderSelect(0,SELECT_BY_POS)==false)   //The order has been closed at last bar
+   {
+      what_happend=4;
+   }
+   else   //the trade has not breached sl/tp, close it
+   {
+      what_happend=5;
+      close_positions();
+   }
    state=0;
    int b2higher = 0;
    if(High[1]>High[3])
@@ -250,10 +213,9 @@ void close_ticket()
    else
       b2higher--;
    b2higher*=ticket_is_buy;
-   FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
+   FileWrite(filehandle,"history_size",history_size,"hits",number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
       "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
-      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"trade",1,b2higher);
-   close_positions();
+      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"b2h?",b2higher,"trade",what_happend);
 }
 
 void    close_positions()
@@ -301,19 +263,16 @@ void OnTick()
    switch(state)
    {
       case 0:
-         open_ticket();  //still looking
+         bar1_search();  //still looking
          break;
       case 1:
-         control_ticket();   //at the end of first bar, check the probable trade
+         bar2_control_ticket();   //at the end of first bar, check the probable trade
          break;
       case 2:
-         close_ticket();    //close ticket if there is still
+         bar3_close_ticket();    //close ticket if there is still
          break;
          
    }
-///   if(lots_in_order()==0)
-//      manage_sltp();
-//      check_closing();
   }
 //------------------------------------------default functions
 void OnDeinit(const int reason)
