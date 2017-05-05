@@ -72,6 +72,7 @@ void bar1_search()
    no_of_l1_lower=0;
    no_of_h2_higher=0;
    no_of_l2_lower=0;
+   ticket_is_buy=0;
    
    for(int i=pattern_len;i<history_size;i++)
      {
@@ -118,16 +119,21 @@ void bar1_search()
          h2_higher_pc=(int)100*no_of_h2_higher/number_of_hits;
          l2_lower_pc=(int)100*no_of_l2_lower/number_of_hits;
 
-         if(b2_higher_pc>hit_threshold)
+         if(h2_higher_pc>hit_threshold)
          {
 //            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
             double enter_price,sl,tp;
 //            enter_price = ND(price_fromalpha(High[1],Low[1],0));
 //            sl = ND(price_fromalpha(High[1],Low[1],-1));
 //            tp = ND(price_fromalpha(High[1],Low[1],+1));
-            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaL1));
+
+//            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaL1));
+//            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
+  //          sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaL1-ave_alphaH2));
+
+            enter_price = ND(price_fromalpha(High[1],Low[1],1));//1 for enter immediatly  ave_alphaL1/2));
             tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
-            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaL1-ave_alphaH2));
+            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaL2+ave_alphaL1));
             int result;
             if(enter_price>Ask)  //already good price, trade
                result=OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 0, sl,tp,NULL,++trade_id,0,clrAliceBlue);
@@ -143,16 +149,19 @@ void bar1_search()
             }
          }
          else
-         if(b2_higher_pc<100-hit_threshold)
+         if(l2_lower_pc>hit_threshold)
          {
 //            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
             double enter_price,sl,tp;
 //            enter_price = ND(price_fromalpha(High[1],Low[1],0));
 //            sl = ND(price_fromalpha(High[1],Low[1],+1));
 //            tp = ND(price_fromalpha(High[1],Low[1],-1));
-            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaH1));
+//            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaH1));
+//            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaL2));
+//            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaH1-ave_alphaL2));
+            enter_price = ND(price_fromalpha(High[1],Low[1],-1));//-1 for enter immediatly ave_alphaH1/2));
             tp = ND(price_fromalpha(High[1],Low[1],ave_alphaL2));
-            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaH1-ave_alphaL2));
+            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaH1+ave_alphaH2));
             int result;
             if(enter_price<Bid)  //already good price, trade
                result=OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 0, sl,tp,NULL,++trade_id,0,clrDarkRed);
