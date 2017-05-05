@@ -10,7 +10,7 @@
 #property strict
 ///////////////////////////////inputs
 input int      pattern_len=5;
-input double   correlation_thresh=93;
+input int   correlation_thresh=93;
 input int      hit_threshold=66;
 input int      min_hit=40;
 input int      history=20000;
@@ -125,9 +125,9 @@ void bar1_search()
 //            enter_price = ND(price_fromalpha(High[1],Low[1],0));
 //            sl = ND(price_fromalpha(High[1],Low[1],-1));
 //            tp = ND(price_fromalpha(High[1],Low[1],+1));
-            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaL2));
+            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaL1));
             tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
-            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaL2-ave_alphaH2));
+            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaL1-ave_alphaH2));
             int result;
             if(enter_price>Ask)  //already good price, trade
                result=OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 0, sl,tp,NULL,++trade_id,0,clrAliceBlue);
@@ -150,9 +150,9 @@ void bar1_search()
 //            enter_price = ND(price_fromalpha(High[1],Low[1],0));
 //            sl = ND(price_fromalpha(High[1],Low[1],+1));
 //            tp = ND(price_fromalpha(High[1],Low[1],-1));
-            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
+            enter_price = ND(price_fromalpha(High[1],Low[1],ave_alphaH1));
             tp = ND(price_fromalpha(High[1],Low[1],ave_alphaL2));
-            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaH2-ave_alphaL2));
+            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaH1-ave_alphaL2));
             int result;
             if(enter_price<Bid)  //already good price, trade
                result=OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 0, sl,tp,NULL,++trade_id,0,clrDarkRed);
