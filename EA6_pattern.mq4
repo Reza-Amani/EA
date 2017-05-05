@@ -31,8 +31,10 @@ int ticket_is_buy;
 int history_size; 
 int total_trades=0,opened_trades=0,threshold_hits=0,processed_bars=0; 
 int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_l1_lower,no_of_h1_higher,no_of_l2_lower,no_of_h2_higher;
+int no_of_h2higher_l1l0;
 double ave_alphaH1,ave_alphaL1,ave_alphaH2,ave_alphaL2;
 int b1_higher_pc,b2_higher_pc,h1_higher_pc,l1_lower_pc,h2_higher_pc,l2_lower_pc;
+int h2higher_l1l0_pc;
 double patternS[_max_len];
 int what_happend;
 
@@ -72,6 +74,7 @@ void bar1_search()
    no_of_l1_lower=0;
    no_of_h2_higher=0;
    no_of_l2_lower=0;
+   no_of_h2higher_l1l0=0;
    ticket_is_buy=0;
    
    for(int i=pattern_len;i<history_size;i++)
@@ -100,6 +103,8 @@ void bar1_search()
                no_of_h2_higher++;
             if(Low[i-2]<Low[i])
                no_of_l2_lower++;
+            if( (High[i-2]>High[i]) && (Low[i-1]<(High[i]+Low[i])/2) )
+               no_of_h2higher_l1l0++;;
             number_of_hits++;
             if(number_of_hits>=100)
                break;
@@ -118,8 +123,9 @@ void bar1_search()
          l1_lower_pc=(int)100*no_of_l1_lower/number_of_hits;
          h2_higher_pc=(int)100*no_of_h2_higher/number_of_hits;
          l2_lower_pc=(int)100*no_of_l2_lower/number_of_hits;
+         h2higher_l1l0_pc=(int)100*no_of_h2higher_l1l0/number_of_hits;
 
-         if(h2_higher_pc>hit_threshold)
+         if(h2higher_l1l0_pc>hit_threshold)
          {
 //            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
             double enter_price,sl,tp;
@@ -131,9 +137,9 @@ void bar1_search()
 //            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
   //          sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaL1-ave_alphaH2));
 
-            enter_price = ND(price_fromalpha(High[1],Low[1],1));//1 for enter immediatly  ave_alphaL1/2));
+            enter_price = ND(price_fromalpha(High[1],Low[1],0));//1 for enter immediatly  ave_alphaL1/2));
             tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
-            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaL2+ave_alphaL1));
+            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaL1+ave_alphaL2));
             int result;
             if(enter_price>Ask)  //already good price, trade
                result=OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 0, sl,tp,NULL,++trade_id,0,clrAliceBlue);
@@ -148,8 +154,8 @@ void bar1_search()
                total_trades++;
             }
          }
-         else
-         if(l2_lower_pc>hit_threshold)
+/*         else
+         if(l1_lower_pc>hit_threshold)
          {
 //            OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 3, price_fromalpha(High[1],Low[1],+0.5),price_fromalpha(High[1],Low[1],-0.5));//,"normal sell",1234,0, clrGreenYellow);
             double enter_price,sl,tp;
@@ -160,8 +166,8 @@ void bar1_search()
 //            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaL2));
 //            sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaH1-ave_alphaL2));
             enter_price = ND(price_fromalpha(High[1],Low[1],-1));//-1 for enter immediatly ave_alphaH1/2));
-            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaL2));
-            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaH1+ave_alphaH2));
+            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaL1));
+            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaH1*2));
             int result;
             if(enter_price<Bid)  //already good price, trade
                result=OrderSend(Symbol(),OP_SELL, i_Lots, Bid, 0, sl,tp,NULL,++trade_id,0,clrDarkRed);
@@ -176,7 +182,7 @@ void bar1_search()
                total_trades++;
             }
          }
-         else
+*/         else
          {  //no trade, just log
          }
       }
