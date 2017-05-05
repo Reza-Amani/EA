@@ -23,12 +23,12 @@ double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
 string logstr="";
 int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
-int no_of_output_lines=0;
 int no_of_trades=0;
 int trade_id=0;
 int state=0;
 int ticket_is_buy;
 int history_size; 
+int total_trades=0,opened_trades=0,threshold_hits=0,processed_bars=0; 
 int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_l1_lower,no_of_h1_higher,no_of_l2_lower,no_of_h2_higher;
 double ave_alphaH1,ave_alphaL1,ave_alphaH2,ave_alphaL2;
 int b1_higher_pc,b2_higher_pc,h1_higher_pc,l1_lower_pc,h2_higher_pc,l2_lower_pc;
@@ -56,7 +56,8 @@ int OnInit()
 //------------------------------------------------functions
 void bar1_search()
 {
-   history_size=min(Bars,history)-pattern_len-10; 
+   history_size=Bars-100;//min(Bars,history)-pattern_len-10; 
+   processed_bars++;
    double corrH,corrL,corrS;
 //   double aH,aL;
    for(int i=1;i<pattern_len;i++)
@@ -103,7 +104,7 @@ void bar1_search()
       }  //end of search for sisters
       if(number_of_hits>_min_hit)
       {
-         no_of_output_lines++;
+         threshold_hits++;
          ave_alphaH1 = array_ave(alpha_H1,number_of_hits);
          ave_alphaL1 = array_ave(alpha_L1,number_of_hits);
          ave_alphaH2 = array_ave(alpha_H2,number_of_hits);
@@ -132,6 +133,7 @@ void bar1_search()
             {  
                ticket_is_buy=1;
                state = 1;
+               total_trades++;
             }
          }
          else
@@ -152,18 +154,14 @@ void bar1_search()
             {  
                ticket_is_buy=-1;
                state = 1;
+               total_trades++;
             }
          }
          else
          {  //no trade, just log
-//            FileWrite(filehandle,number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
-//               "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
-//               "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"No trade",0);
-//            show_log_plus("\r\n no of file entries:",no_of_output_lines,"-------Hits=",number_of_hits,"  b1 higher=",b1_higher_pc,"  b2 higher=",b2_higher_pc,"  H2 higher=",(int)(100*no_of_h2_higher/number_of_hits));
          }
       }
-      
-            
+      show_log_plus("\r\n history_size=",history_size,"  threshold_hits=",threshold_hits,"  total_trades=",total_trades,"  opened_trades=",opened_trades,"  processed_bars=",processed_bars);
 }
 
 void bar2_control_ticket()
@@ -171,21 +169,20 @@ void bar2_control_ticket()
    state = 2;
    if(OrderSelect(0,SELECT_BY_POS)==false)   //The order should have been executed and later closed
    {
-      show_log_plus("order completed in one bar");
       what_happend=2;
+      opened_trades++;
       return;
    }
    switch(OrderType())
    {
       case OP_BUYLIMIT:    //unmet limit orders
       case OP_SELLLIMIT:
-         show_log_plus("unmet limit order");
          close_positions();
          what_happend=3;
          break;
       case OP_BUY:         //executed, not closed order
       case OP_SELL:
-         show_log_plus("executed order");
+         opened_trades++;
          break;
    }
    //      OrderModify(OrderTicket(),OrderOpenPrice(),new_sl,new_tp,0);
