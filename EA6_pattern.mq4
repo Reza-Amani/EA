@@ -10,11 +10,11 @@
 #property strict
 ///////////////////////////////inputs
 input int      pattern_len=5;
-input int   correlation_thresh=93;
+input int      correlation_thresh=93;
 input int      hit_threshold=66;
 input int      min_hit=40;
 input int      history=20000;
-input double i_Lots         =1;
+input double   i_Lots=1;
 //////////////////////////////parameters
 //----macros
 #define _MAX_ALPHA 2.5
@@ -125,9 +125,8 @@ void bar1_search()
          l2_lower_pc=(int)100*no_of_l2_lower/number_of_hits;
          h2higher_l1l0_pc=(int)100*no_of_h2higher_l1l0/number_of_hits;
 
-         if(h2higher_l1l0_pc>hit_threshold)
+         if(h1_higher_pc>hit_threshold)// && l1_lower_pc<(100-hit_threshold))
          {
-//            OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 3, price_fromalpha(High[1],Low[1],-0.5),price_fromalpha(High[1],Low[1],0.5));//,"normal buy",4321,0, clrGreenYellow);
             double enter_price,sl,tp;
 //            enter_price = ND(price_fromalpha(High[1],Low[1],0));
 //            sl = ND(price_fromalpha(High[1],Low[1],-1));
@@ -137,9 +136,9 @@ void bar1_search()
 //            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
   //          sl = ND(price_fromalpha(High[1],Low[1],2*ave_alphaL1-ave_alphaH2));
 
-            enter_price = ND(price_fromalpha(High[1],Low[1],0));//1 for enter immediatly  ave_alphaL1/2));
-            tp = ND(price_fromalpha(High[1],Low[1],ave_alphaH2));
-            sl = ND(price_fromalpha(High[1],Low[1],ave_alphaL1+ave_alphaL2));
+            enter_price = ND(price_fromalpha(High[1],Low[1],1));//1 for enter immediatly  ave_alphaL1/2));
+            tp = ND(price_fromalpha(High[1],Low[1],+0.5));//ave_alphaH2));
+            sl = ND(price_fromalpha(High[1],Low[1],-0.5));//ave_alphaL1+ave_alphaL2));
             int result;
             if(enter_price>Ask)  //already good price, trade
                result=OrderSend(Symbol(),OP_BUY, i_Lots, Ask, 0, sl,tp,NULL,++trade_id,0,clrAliceBlue);
@@ -227,19 +226,19 @@ void bar3_close_ticket()
       close_positions();
    }
    state=0;
-   int b2higher = 0;
-   if(High[1]>High[3])
-      b2higher++;
+   int b1higher = 0;
+   if(High[1]>High[2])
+      b1higher++;
    else
-      b2higher--;
-   if(Low[1]>Low[3])
-      b2higher++;
+      b1higher--;
+   if(Low[1]>Low[2])
+      b1higher++;
    else
-      b2higher--;
-   b2higher*=ticket_is_buy;
+      b1higher--;
+   b1higher*=ticket_is_buy;
    FileWrite(filehandle,"history_size",history_size,"hits",number_of_hits,"B1h",b1_higher_pc,"B2h",b2_higher_pc,
       "H1h",h1_higher_pc,"L1l",l1_lower_pc,"H2h",h2_higher_pc,"L2l",l2_lower_pc,
-      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"b2h?",b2higher,"trade",what_happend);
+      "aH1",ave_alphaH1,"aL1",ave_alphaL1,"aH2",ave_alphaH2,"aL2",ave_alphaL2,"b1h?",b1higher,"trade",what_happend);
 }
 
 void    close_positions()

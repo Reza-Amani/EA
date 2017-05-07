@@ -10,3 +10,5 @@ H2 is highly correlated with L1. so, meeting both conditions L1 low and H1 high 
 Hence, lower L1 encourages lower H2. As a result, working on L1 entry is not a good idea.
 Also, I remember that close is not predictable.
 Maybe, the only realistic idea is open price then sl and tp on H1 and L1
+
+simulation on open prices is suitable only if you want to open/close by EA; if sl and tp are hit at the same bar, it won't work
